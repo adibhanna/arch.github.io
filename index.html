@@ -9,6 +9,9 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -210,6 +213,30 @@
             </svg>
         );
 
+        const Maximize2 = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/>
+            </svg>
+        );
+
+        const Minimize2 = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" x2="21" y1="10" y2="3"/><line x1="3" x2="10" y1="21" y2="14"/>
+            </svg>
+        );
+
+        const Eye = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+        );
+
+        const Edit3 = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+        );
+
         // Tooltip Component
         const Tooltip = ({ children, content, darkMode }) => {
             const [show, setShow] = useState(false);
@@ -290,6 +317,79 @@
             );
         };
 
+        // Syntax Highlighter Component
+        const SyntaxHighlighter = ({ code, language = 'javascript', darkMode }) => {
+            const [highlighted, setHighlighted] = useState('');
+
+            useEffect(() => {
+                if (!code.trim()) {
+                    setHighlighted('');
+                    return;
+                }
+
+                // Use Prism to highlight
+                const lang = Prism.languages[language] || Prism.languages.javascript;
+                const html = Prism.highlight(code, lang, language);
+                setHighlighted(html);
+            }, [code, language]);
+
+            if (!code.trim()) {
+                return (
+                    <div className={`text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                        No code to preview
+                    </div>
+                );
+            }
+
+            return (
+                <pre className={`text-sm overflow-auto rounded-lg p-4 ${darkMode ? 'bg-[#2d2d2d]' : 'bg-[#2d2d2d]'}`} style={{ margin: 0 }}>
+                    <code
+                        className={`language-${language}`}
+                        dangerouslySetInnerHTML={{ __html: highlighted }}
+                    />
+                </pre>
+            );
+        };
+
+        // Fullscreen Modal Component
+        const FullscreenModal = ({ isOpen, onClose, title, children, darkMode }) => {
+            useEffect(() => {
+                if (isOpen) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+                return () => {
+                    document.body.style.overflow = '';
+                };
+            }, [isOpen]);
+
+            if (!isOpen) return null;
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                        onClick={onClose}
+                    />
+                    <div className={`relative w-full max-w-6xl max-h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col ${darkMode ? 'bg-zinc-900' : 'bg-white'}`}>
+                        <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
+                            <h3 className={`font-medium ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>{title}</h3>
+                            <button
+                                onClick={onClose}
+                                className={`p-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-600'}`}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-auto p-6">
+                            {children}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         // Progress Ring Component
         const ProgressRing = ({ progress, size = 100, darkMode }) => {
             const strokeWidth = 6;
@@ -338,8 +438,12 @@
             const [projectName, setProjectName] = useState('');
             const [notes, setNotes] = useState({});
             const [codeSnippets, setCodeSnippets] = useState({});
+            const [codeLanguages, setCodeLanguages] = useState({});
+            const [codePreviewModes, setCodePreviewModes] = useState({});
             const [diagrams, setDiagrams] = useState({});
             const [activeTabs, setActiveTabs] = useState({});
+            const [fullscreenDiagram, setFullscreenDiagram] = useState(null);
+            const [fullscreenCode, setFullscreenCode] = useState(null);
             const [stakeholders, setStakeholders] = useState([]);
             const [newStakeholder, setNewStakeholder] = useState({ name: '', role: '' });
             const [references, setReferences] = useState([]);
@@ -363,6 +467,7 @@
                         if (data.checkedItems) setCheckedItems(data.checkedItems);
                         if (data.notes) setNotes(data.notes);
                         if (data.codeSnippets) setCodeSnippets(data.codeSnippets);
+                        if (data.codeLanguages) setCodeLanguages(data.codeLanguages);
                         if (data.diagrams) setDiagrams(data.diagrams);
                         if (data.projectName) setProjectName(data.projectName);
                         if (data.expandedSections) setExpandedSections(data.expandedSections);
@@ -383,6 +488,7 @@
                             checkedItems,
                             notes,
                             codeSnippets,
+                            codeLanguages,
                             diagrams,
                             projectName,
                             expandedSections,
@@ -397,7 +503,7 @@
                     }
                 }, 500);
                 return () => clearTimeout(timeoutId);
-            }, [checkedItems, notes, codeSnippets, diagrams, projectName, expandedSections, stakeholders, references]);
+            }, [checkedItems, notes, codeSnippets, codeLanguages, diagrams, projectName, expandedSections, stakeholders, references]);
 
             useEffect(() => {
                 document.documentElement.classList.toggle('dark', darkMode);
@@ -1156,6 +1262,22 @@
                 }));
             };
 
+            const setCodeLanguage = (phaseId, sectionIndex, questionIndex, language) => {
+                const key = `${phaseId}-${sectionIndex}-${questionIndex}`;
+                setCodeLanguages(prev => ({
+                    ...prev,
+                    [key]: language
+                }));
+            };
+
+            const toggleCodePreview = (phaseId, sectionIndex, questionIndex) => {
+                const key = `${phaseId}-${sectionIndex}-${questionIndex}`;
+                setCodePreviewModes(prev => ({
+                    ...prev,
+                    [key]: !prev[key]
+                }));
+            };
+
             const addReference = () => {
                 if (newReference.url.trim()) {
                     setReferences(prev => [...prev, {
@@ -1184,12 +1306,16 @@
                     setCheckedItems({});
                     setNotes({});
                     setCodeSnippets({});
+                    setCodeLanguages({});
+                    setCodePreviewModes({});
                     setDiagrams({});
                     setActiveTabs({});
                     setProjectName('');
                     setExpandedSections({});
                     setStakeholders([]);
                     setReferences([]);
+                    setFullscreenDiagram(null);
+                    setFullscreenCode(null);
                     localStorage.removeItem(STORAGE_KEY);
                 }
             };
@@ -1794,23 +1920,85 @@
 
                                                                                                 {/* Code Tab */}
                                                                                                 {activeTab === 'code' && (
-                                                                                                    <textarea
-                                                                                                        placeholder="Add code snippet..."
-                                                                                                        value={code}
-                                                                                                        onChange={(e) => updateCodeSnippet(phase.id, sIndex, qIndex, e.target.value)}
-                                                                                                        className={`w-full px-3 py-2 text-sm font-mono border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-none transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
-                                                                                                        rows="4"
-                                                                                                    />
+                                                                                                    <div className="space-y-2">
+                                                                                                        {/* Code toolbar */}
+                                                                                                        <div className="flex items-center justify-between">
+                                                                                                            <div className="flex items-center gap-2">
+                                                                                                                <select
+                                                                                                                    value={codeLanguages[itemKey] || 'javascript'}
+                                                                                                                    onChange={(e) => setCodeLanguage(phase.id, sIndex, qIndex, e.target.value)}
+                                                                                                                    className={`px-2 py-1 text-xs border rounded transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700'}`}
+                                                                                                                >
+                                                                                                                    <option value="javascript">JavaScript</option>
+                                                                                                                    <option value="typescript">TypeScript</option>
+                                                                                                                    <option value="python">Python</option>
+                                                                                                                    <option value="go">Go</option>
+                                                                                                                    <option value="rust">Rust</option>
+                                                                                                                    <option value="java">Java</option>
+                                                                                                                    <option value="csharp">C#</option>
+                                                                                                                    <option value="sql">SQL</option>
+                                                                                                                    <option value="bash">Bash</option>
+                                                                                                                    <option value="yaml">YAML</option>
+                                                                                                                    <option value="json">JSON</option>
+                                                                                                                    <option value="markdown">Markdown</option>
+                                                                                                                </select>
+                                                                                                                <button
+                                                                                                                    onClick={() => toggleCodePreview(phase.id, sIndex, qIndex)}
+                                                                                                                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${codePreviewModes[itemKey] ? (darkMode ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-200 text-zinc-800') : (darkMode ? 'text-zinc-500 hover:text-zinc-400 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-600 hover:bg-zinc-100')}`}
+                                                                                                                >
+                                                                                                                    {codePreviewModes[itemKey] ? <Edit3 size={12} /> : <Eye size={12} />}
+                                                                                                                    <span>{codePreviewModes[itemKey] ? 'Edit' : 'Preview'}</span>
+                                                                                                                </button>
+                                                                                                            </div>
+                                                                                                            {code && (
+                                                                                                                <button
+                                                                                                                    onClick={() => setFullscreenCode({ code, language: codeLanguages[itemKey] || 'javascript', questionText })}
+                                                                                                                    className={`p-1.5 rounded transition-colors ${darkMode ? 'text-zinc-500 hover:text-zinc-400 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'}`}
+                                                                                                                    title="Fullscreen"
+                                                                                                                >
+                                                                                                                    <Maximize2 size={14} />
+                                                                                                                </button>
+                                                                                                            )}
+                                                                                                        </div>
+
+                                                                                                        {/* Code editor or preview */}
+                                                                                                        {codePreviewModes[itemKey] && code ? (
+                                                                                                            <div className="rounded-lg overflow-hidden">
+                                                                                                                <SyntaxHighlighter code={code} language={codeLanguages[itemKey] || 'javascript'} darkMode={darkMode} />
+                                                                                                            </div>
+                                                                                                        ) : (
+                                                                                                            <textarea
+                                                                                                                placeholder="Add code snippet..."
+                                                                                                                value={code}
+                                                                                                                onChange={(e) => updateCodeSnippet(phase.id, sIndex, qIndex, e.target.value)}
+                                                                                                                className={`w-full px-3 py-2 text-sm font-mono border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-y transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
+                                                                                                                rows="8"
+                                                                                                            />
+                                                                                                        )}
+                                                                                                    </div>
                                                                                                 )}
 
                                                                                                 {/* Diagram Tab */}
                                                                                                 {activeTab === 'diagram' && (
                                                                                                     <div className="space-y-3">
+                                                                                                        {/* Diagram toolbar */}
+                                                                                                        <div className="flex items-center justify-between">
+                                                                                                            <span className={`text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Mermaid diagram</span>
+                                                                                                            {diagram && (
+                                                                                                                <button
+                                                                                                                    onClick={() => setFullscreenDiagram({ code: diagram, questionText })}
+                                                                                                                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${darkMode ? 'text-zinc-500 hover:text-zinc-400 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'}`}
+                                                                                                                >
+                                                                                                                    <Maximize2 size={12} />
+                                                                                                                    <span>Fullscreen Preview</span>
+                                                                                                                </button>
+                                                                                                            )}
+                                                                                                        </div>
                                                                                                         <textarea
                                                                                                             placeholder="Enter mermaid diagram code...&#10;&#10;Example:&#10;graph TD&#10;    A[Start] --> B[Process]&#10;    B --> C[End]"
                                                                                                             value={diagram}
                                                                                                             onChange={(e) => updateDiagram(phase.id, sIndex, qIndex, e.target.value)}
-                                                                                                            className={`w-full px-3 py-2 text-sm font-mono border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-none transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
+                                                                                                            className={`w-full px-3 py-2 text-sm font-mono border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-y transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
                                                                                                             rows="4"
                                                                                                         />
                                                                                                         {diagram && (
@@ -1843,6 +2031,40 @@
                             </div>
                         </div>
                     </div>
+
+                    {/* Fullscreen Code Modal */}
+                    <FullscreenModal
+                        isOpen={!!fullscreenCode}
+                        onClose={() => setFullscreenCode(null)}
+                        title={fullscreenCode?.questionText || 'Code Preview'}
+                        darkMode={darkMode}
+                    >
+                        {fullscreenCode && (
+                            <SyntaxHighlighter
+                                code={fullscreenCode.code}
+                                language={fullscreenCode.language}
+                                darkMode={darkMode}
+                            />
+                        )}
+                    </FullscreenModal>
+
+                    {/* Fullscreen Diagram Modal */}
+                    <FullscreenModal
+                        isOpen={!!fullscreenDiagram}
+                        onClose={() => setFullscreenDiagram(null)}
+                        title={fullscreenDiagram?.questionText || 'Diagram Preview'}
+                        darkMode={darkMode}
+                    >
+                        {fullscreenDiagram && (
+                            <div className="flex items-center justify-center min-h-[60vh]">
+                                <MermaidDiagram
+                                    code={fullscreenDiagram.code}
+                                    darkMode={darkMode}
+                                    id={`fullscreen-${Date.now()}`}
+                                />
+                            </div>
+                        )}
+                    </FullscreenModal>
                 </div>
             );
         };
