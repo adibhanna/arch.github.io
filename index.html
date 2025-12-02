@@ -13,6 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -25,47 +26,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', system-ui, sans-serif; }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .glass-dark {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        @keyframes gradient-shift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradient-shift 15s ease infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .float-animation {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); opacity: 1; }
-            50% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(0.95); opacity: 1; }
-        }
-
-        .pulse-ring {
-            animation: pulse-ring 2s ease-in-out infinite;
-        }
 
         .progress-ring {
             transform: rotate(-90deg);
@@ -98,45 +58,15 @@
         }
 
         .hover-lift:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
         }
 
-        textarea:focus {
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        .dark .hover-lift:hover {
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
         }
 
-        input:focus {
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        .scrollbar-thin::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .scrollbar-thin::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 3px;
-        }
-
-        .phase-card {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .phase-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: inherit;
-            opacity: 0.5;
+        .light .hover-lift:hover {
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -174,10 +104,16 @@
             </svg>
         );
 
-        const Sparkles = ({ size = 20, className = "" }) => (
+        const Sun = ({ size = 20, className = "" }) => (
             <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-                <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+        );
+
+        const Moon = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
         );
 
@@ -189,8 +125,8 @@
         );
 
         // Progress Ring Component
-        const ProgressRing = ({ progress, size = 120 }) => {
-            const strokeWidth = 8;
+        const ProgressRing = ({ progress, size = 100, darkMode }) => {
+            const strokeWidth = 6;
             const radius = (size - strokeWidth) / 2;
             const circumference = radius * 2 * Math.PI;
             const offset = circumference - (progress / 100) * circumference;
@@ -199,7 +135,7 @@
                 <div className="relative inline-flex items-center justify-center">
                     <svg width={size} height={size} className="progress-ring">
                         <circle
-                            className="text-slate-200"
+                            className={darkMode ? "text-zinc-700" : "text-zinc-200"}
                             strokeWidth={strokeWidth}
                             stroke="currentColor"
                             fill="transparent"
@@ -208,27 +144,21 @@
                             cy={size / 2}
                         />
                         <circle
-                            className="text-indigo-500 progress-ring-circle"
+                            className="progress-ring-circle"
                             strokeWidth={strokeWidth}
                             strokeDasharray={circumference}
                             strokeDashoffset={offset}
                             strokeLinecap="round"
-                            stroke="url(#gradient)"
+                            stroke={darkMode ? "#a1a1aa" : "#52525b"}
                             fill="transparent"
                             r={radius}
                             cx={size / 2}
                             cy={size / 2}
                         />
-                        <defs>
-                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stopColor="#6366f1" />
-                                <stop offset="100%" stopColor="#a855f7" />
-                            </linearGradient>
-                        </defs>
                     </svg>
                     <div className="absolute flex flex-col items-center justify-center">
-                        <span className="text-3xl font-bold text-slate-800">{progress}%</span>
-                        <span className="text-xs text-slate-500 font-medium">Complete</span>
+                        <span className={`text-2xl font-semibold ${darkMode ? 'text-zinc-100' : 'text-zinc-800'}`}>{progress}%</span>
+                        <span className={`text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>complete</span>
                     </div>
                 </div>
             );
@@ -239,6 +169,16 @@
             const [checkedItems, setCheckedItems] = useState({});
             const [projectName, setProjectName] = useState('');
             const [notes, setNotes] = useState({});
+            const [darkMode, setDarkMode] = useState(() => {
+                if (typeof window !== 'undefined') {
+                    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+                }
+                return false;
+            });
+
+            useEffect(() => {
+                document.documentElement.classList.toggle('dark', darkMode);
+            }, [darkMode]);
 
             const framework = [
                 {
@@ -246,9 +186,6 @@
                     phase: 'Discovery & Problem Definition',
                     number: '01',
                     description: 'Start by clearly defining the problem you\'re solving and understanding the constraints. This foundation prevents building the wrong thing and ensures alignment with business goals.',
-                    gradient: 'from-blue-500 to-cyan-400',
-                    lightGradient: 'from-blue-50 to-cyan-50',
-                    accentColor: 'blue',
                     sections: [
                         {
                             title: 'Problem Space',
@@ -281,9 +218,6 @@
                     phase: 'Requirements Analysis',
                     number: '02',
                     description: 'Quantify your system\'s needs. Vague requirements lead to over-engineering or under-building. Get specific numbers for scale, performance, and reliability.',
-                    gradient: 'from-violet-500 to-purple-400',
-                    lightGradient: 'from-violet-50 to-purple-50',
-                    accentColor: 'violet',
                     sections: [
                         {
                             title: 'Scale & Performance',
@@ -328,9 +262,6 @@
                     phase: 'Data & Domain Modeling',
                     number: '03',
                     description: 'Model your domain before writing code. Understanding entities, relationships, and boundaries prevents costly refactors and enables better service decomposition.',
-                    gradient: 'from-emerald-500 to-teal-400',
-                    lightGradient: 'from-emerald-50 to-teal-50',
-                    accentColor: 'emerald',
                     sections: [
                         {
                             title: 'Core Entities',
@@ -363,9 +294,6 @@
                     phase: 'Architecture Design',
                     number: '04',
                     description: 'Make deliberate choices about system structure and technology. Document trade-offs explicitly—every decision has costs and benefits.',
-                    gradient: 'from-orange-500 to-amber-400',
-                    lightGradient: 'from-orange-50 to-amber-50',
-                    accentColor: 'orange',
                     sections: [
                         {
                             title: 'System Structure',
@@ -410,9 +338,6 @@
                     phase: 'Resilience & Failure Planning',
                     number: '05',
                     description: 'Plan for failure before it happens. Systems fail—the question is whether you\'ve designed for graceful degradation and quick recovery.',
-                    gradient: 'from-rose-500 to-pink-400',
-                    lightGradient: 'from-rose-50 to-pink-50',
-                    accentColor: 'rose',
                     sections: [
                         {
                             title: 'Failure Modes',
@@ -445,9 +370,6 @@
                     phase: 'Security & Privacy',
                     number: '06',
                     description: 'Build security in from the start, not as an afterthought. Consider authentication, authorization, data protection, and compliance requirements.',
-                    gradient: 'from-amber-500 to-yellow-400',
-                    lightGradient: 'from-amber-50 to-yellow-50',
-                    accentColor: 'amber',
                     sections: [
                         {
                             title: 'Security Posture',
@@ -480,9 +402,6 @@
                     phase: 'Observability & Operations',
                     number: '07',
                     description: 'You can\'t fix what you can\'t see. Plan how you\'ll monitor, debug, and operate the system in production from day one.',
-                    gradient: 'from-indigo-500 to-blue-400',
-                    lightGradient: 'from-indigo-50 to-blue-50',
-                    accentColor: 'indigo',
                     sections: [
                         {
                             title: 'Monitoring & Metrics',
@@ -515,9 +434,6 @@
                     phase: 'Team & Organization',
                     number: '08',
                     description: 'Architecture must match team capabilities and structure. The best technical design fails if the team can\'t build or maintain it.',
-                    gradient: 'from-fuchsia-500 to-pink-400',
-                    lightGradient: 'from-fuchsia-50 to-pink-50',
-                    accentColor: 'fuchsia',
                     sections: [
                         {
                             title: 'Team Capabilities',
@@ -550,9 +466,6 @@
                     phase: 'Evolution & Future-Proofing',
                     number: '09',
                     description: 'Systems evolve. Design for change by identifying what\'s likely to change, what\'s hard to change, and how you\'ll migrate without disruption.',
-                    gradient: 'from-teal-500 to-cyan-400',
-                    lightGradient: 'from-teal-50 to-cyan-50',
-                    accentColor: 'teal',
                     sections: [
                         {
                             title: 'Change Management',
@@ -648,60 +561,55 @@
             };
 
             return (
-                <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 animate-gradient">
-                    {/* Decorative background elements */}
-                    <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 float-animation"></div>
-                        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 float-animation" style={{animationDelay: '2s'}}></div>
-                        <div className="absolute -bottom-40 right-1/3 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 float-animation" style={{animationDelay: '4s'}}></div>
-                    </div>
-
-                    <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+                <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-zinc-950' : 'bg-zinc-50'}`}>
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
                         {/* Header */}
-                        <div className="glass rounded-3xl shadow-xl shadow-slate-200/50 p-6 sm:p-10 mb-8 border border-white/50 hover-lift">
-                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+                        <div className={`rounded-2xl p-6 sm:p-8 mb-8 border transition-colors duration-300 hover-lift ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                                 <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl shadow-lg shadow-indigo-200">
-                                            <Sparkles size={24} className="text-white" />
-                                        </div>
-                                        <span className="text-sm font-semibold text-indigo-600 tracking-wide uppercase">Architecture Framework</span>
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h1 className={`text-2xl sm:text-3xl font-semibold tracking-tight ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
+                                            System Architecture Framework
+                                        </h1>
+                                        <button
+                                            onClick={() => setDarkMode(!darkMode)}
+                                            className={`p-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-600'}`}
+                                            aria-label="Toggle dark mode"
+                                        >
+                                            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                                        </button>
                                     </div>
-                                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800 mb-3 tracking-tight">
-                                        System Design
-                                        <span className="block bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Questionnaire</span>
-                                    </h1>
-                                    <p className="text-slate-500 text-lg max-w-xl">
-                                        A comprehensive framework for architecting robust, scalable systems.
+                                    <p className={`text-sm mb-6 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                                        A comprehensive checklist for designing robust, scalable systems. Work through each phase to ensure you've considered all aspects of your architecture.
                                     </p>
 
-                                    <div className="mt-6">
-                                        <label className="block text-sm font-medium text-slate-600 mb-2">Project Name</label>
+                                    <div>
+                                        <label className={`block text-xs font-medium mb-1.5 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Project Name</label>
                                         <input
                                             type="text"
-                                            placeholder="Enter your project name..."
+                                            placeholder="Enter project name..."
                                             value={projectName}
                                             onChange={(e) => setProjectName(e.target.value)}
-                                            className="w-full max-w-md px-5 py-3.5 bg-white/70 border-2 border-slate-200/50 rounded-xl focus:border-indigo-400 focus:outline-none text-lg transition-all duration-200 placeholder:text-slate-400"
+                                            className={`w-full max-w-sm px-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
                                         />
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col items-center gap-4">
-                                    <ProgressRing progress={calculateProgress()} />
+                                <div className="flex flex-row lg:flex-col items-center gap-4">
+                                    <ProgressRing progress={calculateProgress()} darkMode={darkMode} />
                                     <button
                                         onClick={exportNotes}
-                                        className="flex items-center gap-2.5 px-6 py-3 bg-gradient-to-r from-slate-800 to-slate-700 text-white rounded-xl hover:from-slate-700 hover:to-slate-600 transition-all duration-200 shadow-lg shadow-slate-300 font-medium"
+                                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
                                     >
-                                        <Download size={18} />
-                                        <span>Export Notes</span>
+                                        <Download size={16} />
+                                        <span>Export</span>
                                     </button>
                                 </div>
                             </div>
                         </div>
 
                         {/* Phases */}
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             {framework.map((phase) => {
                                 const phaseChecked = phase.sections.reduce((acc, section, sIndex) => {
                                     return acc + section.questions.filter((_, qIndex) =>
@@ -711,28 +619,25 @@
                                 const phaseTotal = phase.sections.reduce((acc, section) => acc + section.questions.length, 0);
 
                                 return (
-                                    <div key={phase.id} className="phase-card glass rounded-2xl shadow-lg shadow-slate-200/50 border border-white/50 overflow-hidden hover-lift">
+                                    <div key={phase.id} className={`rounded-2xl border overflow-hidden transition-colors duration-300 hover-lift ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
                                         {/* Phase Header */}
-                                        <div className={`bg-gradient-to-r ${phase.gradient} px-6 sm:px-8 py-5 sm:py-6`}>
+                                        <div className={`px-6 py-5 border-b ${darkMode ? 'border-zinc-800' : 'border-zinc-100'}`}>
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex items-start gap-4">
-                                                    <span className="text-4xl sm:text-5xl font-bold text-white/30">{phase.number}</span>
+                                                    <span className={`text-3xl font-semibold tabular-nums ${darkMode ? 'text-zinc-700' : 'text-zinc-300'}`}>{phase.number}</span>
                                                     <div className="flex-1">
-                                                        <h2 className="text-xl sm:text-2xl font-bold text-white">{phase.phase}</h2>
-                                                        <p className="text-white/80 text-sm mt-2 leading-relaxed max-w-2xl">{phase.description}</p>
-                                                        <p className="text-white/50 text-xs mt-2">{phase.sections.length} sections</p>
+                                                        <h2 className={`text-lg font-semibold ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>{phase.phase}</h2>
+                                                        <p className={`text-sm mt-1.5 leading-relaxed ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>{phase.description}</p>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex-shrink-0">
-                                                    <span className="text-white font-semibold">{phaseChecked}</span>
-                                                    <span className="text-white/60">/</span>
-                                                    <span className="text-white/80">{phaseTotal}</span>
+                                                <div className={`text-sm font-medium tabular-nums px-2.5 py-1 rounded-md ${darkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-600'}`}>
+                                                    {phaseChecked}/{phaseTotal}
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Sections */}
-                                        <div className="divide-y divide-slate-100">
+                                        <div className={`divide-y ${darkMode ? 'divide-zinc-800' : 'divide-zinc-100'}`}>
                                             {phase.sections.map((section, sIndex) => {
                                                 const sectionKey = `${phase.id}-${sIndex}`;
                                                 const isExpanded = expandedSections[sectionKey];
@@ -744,64 +649,61 @@
                                                     <div key={sIndex}>
                                                         <button
                                                             onClick={() => toggleSection(phase.id, sIndex)}
-                                                            className="w-full px-6 sm:px-8 py-5 flex items-center justify-between hover:bg-slate-50/50 transition-all duration-200 group"
+                                                            className={`w-full px-6 py-4 flex items-center justify-between transition-colors ${darkMode ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50'}`}
                                                         >
-                                                            <div className="flex items-center gap-4">
-                                                                <div className={`p-2 rounded-lg bg-gradient-to-br ${phase.lightGradient} transition-transform duration-200 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>
-                                                                    <ChevronDown size={18} className={`text-${phase.accentColor}-500`} />
-                                                                </div>
-                                                                <h3 className="text-lg font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">{section.title}</h3>
+                                                            <div className="flex items-center gap-3">
+                                                                <ChevronDown
+                                                                    size={16}
+                                                                    className={`transition-transform duration-200 ${darkMode ? 'text-zinc-600' : 'text-zinc-400'} ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
+                                                                />
+                                                                <h3 className={`text-sm font-medium ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>{section.title}</h3>
                                                             </div>
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                                <div className={`w-16 h-1 rounded-full overflow-hidden ${darkMode ? 'bg-zinc-800' : 'bg-zinc-200'}`}>
                                                                     <div
-                                                                        className={`h-full bg-gradient-to-r ${phase.gradient} rounded-full transition-all duration-500`}
+                                                                        className={`h-full rounded-full transition-all duration-500 ${darkMode ? 'bg-zinc-600' : 'bg-zinc-500'}`}
                                                                         style={{ width: `${(sectionChecked / section.questions.length) * 100}%` }}
                                                                     />
                                                                 </div>
-                                                                <span className="text-sm font-medium text-slate-400 min-w-[3rem] text-right">
+                                                                <span className={`text-xs font-medium tabular-nums ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
                                                                     {sectionChecked}/{section.questions.length}
                                                                 </span>
                                                             </div>
                                                         </button>
 
                                                         {isExpanded && (
-                                                            <div className="px-6 sm:px-8 pb-6 section-expand">
+                                                            <div className="px-6 pb-5 section-expand">
                                                                 {section.description && (
-                                                                    <p className="ml-12 mb-4 text-sm text-slate-500 leading-relaxed">{section.description}</p>
+                                                                    <p className={`ml-7 mb-4 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>{section.description}</p>
                                                                 )}
-                                                                <div className="space-y-4 ml-12">
+                                                                <div className="space-y-3 ml-7">
                                                                     {section.questions.map((question, qIndex) => {
                                                                         const itemKey = `${phase.id}-${sIndex}-${qIndex}`;
                                                                         const isChecked = checkedItems[itemKey];
                                                                         const note = notes[itemKey] || '';
 
                                                                         return (
-                                                                            <div key={qIndex} className={`p-4 rounded-xl transition-all duration-200 ${isChecked ? 'bg-gradient-to-r ' + phase.lightGradient : 'bg-slate-50/50 hover:bg-slate-50'}`}>
-                                                                                <div className="flex items-start gap-4">
+                                                                            <div key={qIndex} className={`p-3 rounded-lg transition-colors ${isChecked ? (darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50') : ''}`}>
+                                                                                <div className="flex items-start gap-3">
                                                                                     <button
                                                                                         onClick={() => toggleCheck(phase.id, sIndex, qIndex)}
                                                                                         className="mt-0.5 flex-shrink-0 checkbox-custom"
                                                                                     >
                                                                                         {isChecked ? (
-                                                                                            <div className={`p-1 rounded-full bg-gradient-to-r ${phase.gradient}`}>
-                                                                                                <CheckCircle2 size={18} className="text-white" />
-                                                                                            </div>
+                                                                                            <CheckCircle2 size={18} className={darkMode ? 'text-zinc-500' : 'text-zinc-600'} />
                                                                                         ) : (
-                                                                                            <div className="p-1">
-                                                                                                <Circle size={18} className="text-slate-300 hover:text-slate-400 transition-colors" />
-                                                                                            </div>
+                                                                                            <Circle size={18} className={darkMode ? 'text-zinc-700 hover:text-zinc-600' : 'text-zinc-300 hover:text-zinc-400'} />
                                                                                         )}
                                                                                     </button>
                                                                                     <div className="flex-1 min-w-0">
-                                                                                        <span className={`text-slate-700 leading-relaxed ${isChecked ? 'text-slate-500' : ''}`}>
+                                                                                        <span className={`text-sm leading-relaxed ${isChecked ? (darkMode ? 'text-zinc-600' : 'text-zinc-400') : (darkMode ? 'text-zinc-300' : 'text-zinc-700')}`}>
                                                                                             {question}
                                                                                         </span>
                                                                                         <textarea
-                                                                                            placeholder="Add your notes..."
+                                                                                            placeholder="Add notes..."
                                                                                             value={note}
                                                                                             onChange={(e) => updateNote(phase.id, sIndex, qIndex, e.target.value)}
-                                                                                            className="mt-3 w-full px-4 py-3 text-sm bg-white/80 border border-slate-200/50 rounded-xl focus:border-indigo-300 focus:outline-none resize-none transition-all duration-200 placeholder:text-slate-400"
+                                                                                            className={`mt-2 w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-none transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
                                                                                             rows="2"
                                                                                         />
                                                                                     </div>
@@ -822,37 +724,22 @@
                         </div>
 
                         {/* Footer */}
-                        <div className="glass-dark rounded-2xl shadow-xl p-8 mt-10 border border-slate-700/50">
-                            <div className="flex items-start gap-4">
-                                <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl">
-                                    <BookOpen size={24} className="text-white" />
-                                </div>
+                        <div className={`rounded-2xl p-6 mt-8 border ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                            <div className="flex items-start gap-3">
+                                <BookOpen size={18} className={darkMode ? 'text-zinc-600' : 'text-zinc-400'} />
                                 <div>
-                                    <h3 className="text-xl font-bold text-white mb-4">How to Use This Framework</h3>
-                                    <ul className="space-y-3 text-slate-300">
-                                        <li className="flex items-start gap-3">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 flex-shrink-0"></span>
-                                            <span>Work through each phase sequentially for best results</span>
-                                        </li>
-                                        <li className="flex items-start gap-3">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-2 flex-shrink-0"></span>
-                                            <span>Check off questions as you answer them and document your decisions</span>
-                                        </li>
-                                        <li className="flex items-start gap-3">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-pink-400 mt-2 flex-shrink-0"></span>
-                                            <span>Export your progress as markdown for documentation</span>
-                                        </li>
-                                        <li className="flex items-start gap-3">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 flex-shrink-0"></span>
-                                            <span>Not every question applies to every project—adapt as needed</span>
-                                        </li>
+                                    <h3 className={`text-sm font-medium mb-2 ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>How to use this framework</h3>
+                                    <ul className={`text-sm space-y-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                                        <li>Work through each phase sequentially for best results</li>
+                                        <li>Check off questions as you answer them and document decisions in the notes</li>
+                                        <li>Export your progress as markdown for documentation</li>
+                                        <li>Not every question applies to every project—adapt as needed</li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Credit */}
-                        <p className="text-center text-slate-400 text-sm mt-8">
+                        <p className={`text-center text-xs mt-6 ${darkMode ? 'text-zinc-700' : 'text-zinc-400'}`}>
                             Built for architects who care about details
                         </p>
                     </div>
