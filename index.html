@@ -204,6 +204,12 @@
             </svg>
         );
 
+        const Upload = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
+            </svg>
+        );
+
         // Tooltip Component
         const Tooltip = ({ children, content, darkMode }) => {
             const [show, setShow] = useState(false);
@@ -562,27 +568,27 @@
                             title: 'API Contracts',
                             description: 'Define clear contracts and standards.',
                             questions: [
-                                'How will APIs be documented? OpenAPI/Swagger? GraphQL schema?',
-                                'Naming conventions: URL structure, field names, error codes?',
-                                'Pagination strategy: Cursor-based? Offset? Keyset?',
-                                'Filtering and sorting conventions?',
-                                'Error handling: Error format? HTTP status codes? Error codes?',
-                                'Idempotency requirements? Idempotency keys?',
-                                'Request validation: Where? How strict?',
-                                'Response envelope structure? Metadata? Links (HATEOAS)?'
+                                { q: 'How will APIs be documented? OpenAPI/Swagger? GraphQL schema?', tip: 'OpenAPI (Swagger) is the standard for REST. GraphQL is self-documenting. Good docs reduce support burden and improve developer experience.' },
+                                { q: 'Naming conventions: URL structure, field names, error codes?', tip: 'Consistency matters more than the specific choice. Use plural nouns for resources (/users), camelCase or snake_case for fields, and standardized error codes.' },
+                                { q: 'Pagination strategy: Cursor-based? Offset? Keyset?', tip: 'Offset is simple but slow for large datasets. Cursor-based is efficient and handles real-time data. Keyset is fast but requires a unique, sequential key.' },
+                                { q: 'Filtering and sorting conventions?', tip: 'Define a consistent query parameter syntax. Common patterns: ?filter[status]=active, ?sort=-created_at. Consider GraphQL for complex filtering needs.' },
+                                { q: 'Error handling: Error format? HTTP status codes? Error codes?', tip: 'Use appropriate HTTP status codes (4xx for client errors, 5xx for server). Include machine-readable error codes and human-readable messages. Be consistent.' },
+                                { q: 'Idempotency requirements? Idempotency keys?', tip: 'Idempotent operations can be safely retried. Use idempotency keys (client-generated UUIDs) for POST requests to prevent duplicate processing.' },
+                                { q: 'Request validation: Where? How strict?', tip: 'Validate at the edge (API gateway) for performance, and in the service for business rules. Be strict on input, lenient on output (Postel\'s law).' },
+                                { q: 'Response envelope structure? Metadata? Links (HATEOAS)?', tip: 'Envelopes wrap data with metadata: {data: [], meta: {total, page}, links: {next, prev}}. HATEOAS provides discoverability but adds complexity.' }
                             ]
                         },
                         {
                             title: 'API Versioning & Evolution',
                             description: 'Plan for change without breaking consumers.',
                             questions: [
-                                'Versioning strategy: URL path? Header? Query param?',
-                                'Breaking vs non-breaking change policy?',
-                                'Deprecation process: Timeline? Communication? Sunset headers?',
-                                'Backward compatibility requirements: How many versions supported?',
-                                'How will you handle schema evolution?',
-                                'Contract testing between services?',
-                                'API changelog and migration guides?'
+                                { q: 'Versioning strategy: URL path? Header? Query param?', tip: 'URL path (/v1/users) is most visible and cacheable. Header versioning is cleaner but harder to test. Pick one and be consistent.' },
+                                { q: 'Breaking vs non-breaking change policy?', tip: 'Non-breaking: adding fields, new endpoints. Breaking: removing fields, changing types, renaming. Breaking changes require new versions.' },
+                                { q: 'Deprecation process: Timeline? Communication? Sunset headers?', tip: 'Give consumers time (6-12 months typical). Use Sunset HTTP headers, email notifications, and dashboard warnings. Monitor usage before removal.' },
+                                { q: 'Backward compatibility requirements: How many versions supported?', tip: 'Supporting multiple versions is expensive. Typically support N and N-1. Plan for eventual sunsetting from day one.' },
+                                { q: 'How will you handle schema evolution?', tip: 'Use additive changes when possible. For breaking changes, consider transformation layers. Schema registries help with compatibility checking.' },
+                                { q: 'Contract testing between services?', tip: 'Contract tests verify API agreements without full integration tests. Tools: Pact, Spring Cloud Contract. Catches breaking changes early.' },
+                                { q: 'API changelog and migration guides?', tip: 'Maintain a changelog for every version. Provide migration guides for breaking changes with code examples. Automate where possible.' }
                             ]
                         }
                     ]
@@ -597,56 +603,56 @@
                             title: 'System Structure',
                             description: 'Define how components are organized and communicate.',
                             questions: [
-                                'Monolith, modular monolith, or microservices? Why?',
-                                'What are the major components/services?',
-                                'Which components are synchronous? Asynchronous?',
-                                'What are the external dependencies?',
-                                'Single database or database per service? Why?',
-                                'How do services communicate? HTTP? Message queues? Events?',
-                                'What\'s the deployment unit? (Container, function, VM)',
-                                'Serverless components? Where does it make sense?'
+                                { q: 'Monolith, modular monolith, or microservices? Why?', tip: 'Monolith for small teams and simple domains. Modular monolith for growing teams. Microservices for independent scaling and deployment. Start simple, split later.' },
+                                { q: 'What are the major components/services?', tip: 'List each component, its responsibility, and its boundaries. Each should do one thing well. Avoid circular dependencies between components.' },
+                                { q: 'Which components are synchronous? Asynchronous?', tip: 'Sync for immediate responses needed. Async for long operations, decoupling, and better resilience. Payment processing often needs sync; email sending should be async.' },
+                                { q: 'What are the external dependencies?', tip: 'List every external service: payment providers, email services, analytics, etc. Each is a potential point of failure. Plan for their outages.' },
+                                { q: 'Single database or database per service? Why?', tip: 'Single DB is simpler but creates coupling. DB per service enables independence but complicates transactions. Start shared, split when needed.' },
+                                { q: 'How do services communicate? HTTP? Message queues? Events?', tip: 'HTTP/REST for request-response. Message queues for reliable async. Events for decoupled pub-sub. Many systems use all three for different use cases.' },
+                                { q: 'What\'s the deployment unit? (Container, function, VM)', tip: 'Containers (Docker) are the default choice. Functions for event-driven, intermittent workloads. VMs for legacy or special requirements.' },
+                                { q: 'Serverless components? Where does it make sense?', tip: 'Serverless is great for variable traffic, event processing, and cron jobs. Less suitable for consistent load or long-running processes. Consider cold starts.' }
                             ]
                         },
                         {
                             title: 'Technology Choices',
                             description: 'Select tools and frameworks based on requirements, not trends.',
                             questions: [
-                                'Primary programming language(s)? Why?',
-                                'Framework choices? Why these over alternatives?',
-                                'Database(s): Which ones? Why? (PostgreSQL, MongoDB, Redis, etc.)',
-                                'Message queue/event bus: Which one? (Kafka, RabbitMQ, SQS, etc.)',
-                                'Search infrastructure: Elasticsearch? Algolia? Database full-text?',
-                                'File/blob storage: S3? GCS? Azure Blob?',
-                                'CDN requirements? Which provider?',
-                                'Infrastructure: AWS? GCP? Azure? On-prem? Multi-cloud?'
+                                { q: 'Primary programming language(s)? Why?', tip: 'Consider team expertise, ecosystem, performance needs, and hiring market. Boring technology is often the right choice. Polyglot has hidden costs.' },
+                                { q: 'Framework choices? Why these over alternatives?', tip: 'Evaluate community support, documentation, long-term viability, and fit for your use case. Popular frameworks have more resources and easier hiring.' },
+                                { q: 'Database(s): Which ones? Why? (PostgreSQL, MongoDB, Redis, etc.)', tip: 'PostgreSQL is the safe default for relational data. MongoDB for flexible schemas. Redis for caching. Choose based on data model and query patterns.' },
+                                { q: 'Message queue/event bus: Which one? (Kafka, RabbitMQ, SQS, etc.)', tip: 'Kafka for high-throughput event streaming. RabbitMQ for complex routing. SQS for simple AWS-native queuing. Match complexity to needs.' },
+                                { q: 'Search infrastructure: Elasticsearch? Algolia? Database full-text?', tip: 'Database full-text for simple needs. Elasticsearch for complex search and analytics. Algolia for instant search with minimal ops. Consider the operational burden.' },
+                                { q: 'File/blob storage: S3? GCS? Azure Blob?', tip: 'Use your cloud provider\'s blob storage. S3 is the de facto standard. Consider CDN integration, lifecycle policies, and cross-region replication needs.' },
+                                { q: 'CDN requirements? Which provider?', tip: 'CDNs improve latency for static assets and reduce origin load. CloudFront for AWS, Cloud CDN for GCP. Consider edge computing capabilities if needed.' },
+                                { q: 'Infrastructure: AWS? GCP? Azure? On-prem? Multi-cloud?', tip: 'Pick one cloud and go deep. Multi-cloud adds complexity without proportional benefit for most. Consider existing contracts, team expertise, and specific service needs.' }
                             ]
                         },
                         {
                             title: 'Caching Strategy',
                             description: 'Design caching layers to optimize performance and reduce load.',
                             questions: [
-                                'What layers need caching? (Browser, CDN, Application, Database)',
-                                'Cache technology: Redis? Memcached? In-memory?',
-                                'Cache invalidation strategy: TTL? Event-based? Manual?',
-                                'Cache-aside, read-through, or write-through pattern?',
-                                'What\'s the cache hit ratio target?',
-                                'Cache warming strategy for cold starts?',
-                                'Distributed caching requirements? Consistency?',
-                                'Cache key design: Namespacing? Versioning?'
+                                { q: 'What layers need caching? (Browser, CDN, Application, Database)', tip: 'Cache at multiple layers. Browser caching for static assets. CDN for global distribution. Application cache for computed data. Database query cache for repeated queries.' },
+                                { q: 'Cache technology: Redis? Memcached? In-memory?', tip: 'Redis is the versatile default (data structures, persistence, pub-sub). Memcached for simple key-value at scale. In-memory for single-instance apps.' },
+                                { q: 'Cache invalidation strategy: TTL? Event-based? Manual?', tip: 'TTL is simplest but may serve stale data. Event-based is accurate but complex. Often combine: short TTL with event invalidation for critical data.' },
+                                { q: 'Cache-aside, read-through, or write-through pattern?', tip: 'Cache-aside: app manages cache explicitly. Read-through: cache fetches on miss. Write-through: writes go to cache and DB. Cache-aside is most common.' },
+                                { q: 'What\'s the cache hit ratio target?', tip: 'Aim for 80-95% hit ratio for application caches. Monitor this metric. Low hit ratio means cache isn\'t effective; very high might mean you\'re caching too much.' },
+                                { q: 'Cache warming strategy for cold starts?', tip: 'Cold cache after deploy or restart hurts performance. Pre-populate critical data on startup. Consider lazy warming for less critical data.' },
+                                { q: 'Distributed caching requirements? Consistency?', tip: 'Distributed caches need consistency strategy. Redis Cluster for sharding. Consider cache-stampede prevention (locking, probabilistic early expiration).' },
+                                { q: 'Cache key design: Namespacing? Versioning?', tip: 'Include version in keys for easy invalidation: "v1:users:123". Use namespaces to avoid collisions. Keep keys short but descriptive.' }
                             ]
                         },
                         {
                             title: 'Trade-offs & Decisions',
                             description: 'Document the compromises you\'re making and why.',
                             questions: [
-                                'Consistency vs Availability: Which did we prioritize? Why?',
-                                'Simplicity vs Flexibility: Where did we compromise?',
-                                'Cost vs Performance: What\'s our optimization target?',
-                                'Time to market vs Perfect design: What\'s the balance?',
-                                'Build vs Buy: What are we building? What are we buying?',
-                                'What technical debt are we intentionally accepting?',
-                                'What are the key architectural decision records (ADRs)?',
-                                'What would we do differently with more time/budget?'
+                                { q: 'Consistency vs Availability: Which did we prioritize? Why?', tip: 'CAP theorem: you can\'t have both during partitions. Most web apps choose availability. Financial systems often need consistency. Know your requirements.' },
+                                { q: 'Simplicity vs Flexibility: Where did we compromise?', tip: 'Flexibility adds complexity. Simple solutions are easier to understand, maintain, and debug. Choose flexibility only where requirements demand it.' },
+                                { q: 'Cost vs Performance: What\'s our optimization target?', tip: 'Define acceptable performance, then optimize for cost. Or define budget, then maximize performance. Know which constraint is harder.' },
+                                { q: 'Time to market vs Perfect design: What\'s the balance?', tip: 'Perfect is the enemy of good. Ship something that works, then iterate. But avoid decisions that are expensive to reverse later.' },
+                                { q: 'Build vs Buy: What are we building? What are we buying?', tip: 'Build core differentiators. Buy commodity features (auth, payments, email). Building everything is slow; buying everything is inflexible.' },
+                                { q: 'What technical debt are we intentionally accepting?', tip: 'Document known shortcuts and why. Technical debt is a tool—sometimes the right choice. Unknown debt is dangerous; known debt is manageable.' },
+                                { q: 'What are the key architectural decision records (ADRs)?', tip: 'ADRs document significant decisions, context, and rationale. Future you will thank present you. Include what was considered and rejected.' },
+                                { q: 'What would we do differently with more time/budget?', tip: 'This reveals what you\'re compromising on. Revisit this list periodically. Some shortcuts become permanent; plan accordingly.' }
                             ]
                         }
                     ]
@@ -661,42 +667,42 @@
                             title: 'Test Pyramid',
                             description: 'Plan your testing layers and coverage targets.',
                             questions: [
-                                'Unit test coverage target? What\'s worth unit testing?',
-                                'Integration test strategy: What integrations to test?',
-                                'End-to-end test coverage: Critical user journeys?',
-                                'Contract testing between services?',
-                                'What testing frameworks and tools?',
-                                'Test data management: Fixtures? Factories? Production snapshots?',
-                                'Mocking strategy: What to mock? What to test against real services?',
-                                'Code coverage requirements? Coverage tools?'
+                                { q: 'Unit test coverage target? What\'s worth unit testing?', tip: 'Aim for 70-80% coverage on business logic. Test complex algorithms, edge cases, and calculations. Don\'t test simple getters/setters or framework code.' },
+                                { q: 'Integration test strategy: What integrations to test?', tip: 'Test database operations, API contracts, and external service integrations. Use real databases in CI when possible. Mock only what you must.' },
+                                { q: 'End-to-end test coverage: Critical user journeys?', tip: 'E2E tests are slow and flaky—use sparingly. Cover critical paths: signup, checkout, core workflows. Aim for 5-20 critical journey tests, not hundreds.' },
+                                { q: 'Contract testing between services?', tip: 'Contract tests verify API agreements without full integration. Essential for microservices. Tools: Pact, Spring Cloud Contract. Run in CI on every PR.' },
+                                { q: 'What testing frameworks and tools?', tip: 'Pick well-supported tools for your stack. Jest/Vitest for JS, pytest for Python, JUnit for Java. Consistency across the team matters more than the specific tool.' },
+                                { q: 'Test data management: Fixtures? Factories? Production snapshots?', tip: 'Factories (faker data) for unit tests. Fixtures for integration tests. Sanitized production snapshots for realistic E2E. Never use real PII in tests.' },
+                                { q: 'Mocking strategy: What to mock? What to test against real services?', tip: 'Mock external services and slow dependencies. Test against real databases and your own services when possible. Over-mocking hides bugs.' },
+                                { q: 'Code coverage requirements? Coverage tools?', tip: 'Coverage is a guide, not a goal. High coverage with bad tests is worse than lower coverage with good tests. Track trends, not absolute numbers.' }
                             ]
                         },
                         {
                             title: 'Performance & Load Testing',
                             description: 'Verify the system meets performance requirements.',
                             questions: [
-                                'Load testing approach: Tools? (k6, Gatling, Locust, JMeter)',
-                                'Performance benchmarks: What latency targets?',
-                                'Stress testing: How far beyond normal load?',
-                                'Soak testing: Long-running stability tests?',
-                                'Capacity planning: How to determine scaling thresholds?',
-                                'Performance regression testing in CI/CD?',
-                                'Database query performance testing?',
-                                'Third-party dependency performance impact?'
+                                { q: 'Load testing approach: Tools? (k6, Gatling, Locust, JMeter)', tip: 'k6 for modern JS-based tests. Gatling for Scala. Locust for Python. JMeter for GUI-based. Choose based on team skills and CI integration needs.' },
+                                { q: 'Performance benchmarks: What latency targets?', tip: 'Define P50, P95, P99 targets for each endpoint. User-facing APIs typically need P95 < 200ms. Batch APIs can be slower. Measure from client perspective.' },
+                                { q: 'Stress testing: How far beyond normal load?', tip: 'Test at 2x, 5x, 10x expected load. Find the breaking point. Understand degradation behavior. Is it graceful or catastrophic?' },
+                                { q: 'Soak testing: Long-running stability tests?', tip: 'Run at normal load for hours or days. Catches memory leaks, connection pool exhaustion, and gradual degradation. Run weekly or before major releases.' },
+                                { q: 'Capacity planning: How to determine scaling thresholds?', tip: 'Identify the bottleneck at each scale level. CPU-bound? Memory? Database connections? I/O? Set scaling triggers below the breaking point.' },
+                                { q: 'Performance regression testing in CI/CD?', tip: 'Run lightweight perf tests on every PR. Compare against baseline. Alert on significant regressions. Full load tests on a schedule (nightly/weekly).' },
+                                { q: 'Database query performance testing?', tip: 'Test queries with production-like data volumes. Small test datasets hide N+1 queries and missing indexes. Use query analyzers (EXPLAIN ANALYZE).' },
+                                { q: 'Third-party dependency performance impact?', tip: 'External APIs add latency and variability. Test with realistic latency injection. Have fallbacks for when dependencies are slow.' }
                             ]
                         },
                         {
                             title: 'Specialized Testing',
                             description: 'Additional testing for specific quality attributes.',
                             questions: [
-                                'Security testing: SAST? DAST? Penetration testing schedule?',
-                                'Accessibility testing: WCAG compliance level? Tools?',
-                                'Chaos engineering: Failure injection testing? (Chaos Monkey, Gremlin)',
-                                'Data integrity testing: Consistency checks?',
-                                'Backup/restore testing: How often verified?',
-                                'Disaster recovery drills: Frequency? Scope?',
-                                'Browser/device compatibility testing matrix?',
-                                'API compatibility testing for breaking changes?'
+                                { q: 'Security testing: SAST? DAST? Penetration testing schedule?', tip: 'SAST (static analysis) in CI for every PR. DAST (dynamic testing) on deployed environments. Professional pen testing annually or after major changes.' },
+                                { q: 'Accessibility testing: WCAG compliance level? Tools?', tip: 'Target WCAG 2.1 AA minimum. Use axe, Lighthouse, or Pa11y in CI. Manual testing with screen readers for critical flows. Legal requirements vary by region.' },
+                                { q: 'Chaos engineering: Failure injection testing? (Chaos Monkey, Gremlin)', tip: 'Start simple: kill random pods, inject latency, simulate outages. Chaos Monkey for random instance termination. Gremlin for controlled experiments. Start in staging.' },
+                                { q: 'Data integrity testing: Consistency checks?', tip: 'Verify referential integrity, business rule invariants, and data consistency across systems. Run reconciliation jobs regularly. Alert on anomalies.' },
+                                { q: 'Backup/restore testing: How often verified?', tip: 'Test restores quarterly at minimum. Untested backups are not backups. Measure restore time. Document the process. Practice under pressure.' },
+                                { q: 'Disaster recovery drills: Frequency? Scope?', tip: 'Run DR drills annually at minimum. Start with tabletop exercises, progress to full failovers. Include the whole team. Document lessons learned.' },
+                                { q: 'Browser/device compatibility testing matrix?', tip: 'Define supported browsers and versions. Test top 3-5 browser/OS combinations. Use BrowserStack or Sauce Labs for coverage. Mobile testing is essential.' },
+                                { q: 'API compatibility testing for breaking changes?', tip: 'Maintain a suite of consumer tests. Run against new versions before release. Breaking changes should fail CI. Communicate changes via changelog.' }
                             ]
                         }
                     ]
@@ -711,42 +717,42 @@
                             title: 'Build & Integration',
                             description: 'Define your continuous integration pipeline.',
                             questions: [
-                                'CI platform: GitHub Actions? GitLab CI? Jenkins? CircleCI?',
-                                'Build pipeline stages: Lint, test, build, scan, publish?',
-                                'Build time target? Current build time?',
-                                'Artifact management: Container registry? Package registry?',
-                                'Dependency scanning: Vulnerabilities? License compliance?',
-                                'Code quality gates: Coverage? Complexity? Duplication?',
-                                'Branch strategy: GitFlow? Trunk-based? GitHub Flow?',
-                                'Merge requirements: Reviews? CI passing? Approvals?'
+                                { q: 'CI platform: GitHub Actions? GitLab CI? Jenkins? CircleCI?', tip: 'GitHub Actions if you\'re on GitHub—great integration. GitLab CI for GitLab. Jenkins for maximum flexibility but high maintenance. Choose based on your git host.' },
+                                { q: 'Build pipeline stages: Lint, test, build, scan, publish?', tip: 'Fail fast: lint first (fastest), then unit tests, then integration tests, then build, then security scan. Each stage should be independently cacheable.' },
+                                { q: 'Build time target? Current build time?', tip: 'Target < 10 minutes for PR builds, < 20 for full builds. Slow builds kill productivity. Parallelize tests, use caching aggressively, consider build splitting.' },
+                                { q: 'Artifact management: Container registry? Package registry?', tip: 'Use your cloud provider\'s registry or Docker Hub. Tag with git SHA and semantic version. Implement retention policies. Scan images for vulnerabilities.' },
+                                { q: 'Dependency scanning: Vulnerabilities? License compliance?', tip: 'Scan dependencies in every build. Tools: Snyk, Dependabot, npm audit. Block high/critical vulnerabilities. Track license compliance for legal requirements.' },
+                                { q: 'Code quality gates: Coverage? Complexity? Duplication?', tip: 'Set minimum standards but don\'t over-constrain. Coverage thresholds (e.g., no decrease), complexity limits, and duplication checks. Quality gates should guide, not block.' },
+                                { q: 'Branch strategy: GitFlow? Trunk-based? GitHub Flow?', tip: 'Trunk-based for mature teams with good CI. GitHub Flow for most teams (feature branches + main). GitFlow is complex—only if you need it.' },
+                                { q: 'Merge requirements: Reviews? CI passing? Approvals?', tip: 'Require at least one review and passing CI. For sensitive areas, require specific approvers (CODEOWNERS). Balance speed with safety.' }
                             ]
                         },
                         {
                             title: 'Deployment Strategy',
                             description: 'Define how changes reach production.',
                             questions: [
-                                'Deployment frequency target: Daily? Weekly? Continuous?',
-                                'Deployment strategy: Rolling? Blue-green? Canary? Feature flags?',
-                                'Environment progression: Dev → Staging → Production?',
-                                'Infrastructure as Code: Terraform? CloudFormation? Pulumi?',
-                                'Container orchestration: Kubernetes? ECS? Nomad?',
-                                'Database migration strategy: How applied? Rollback plan?',
-                                'Configuration management: Environment variables? Secrets manager?',
-                                'Deployment approval process: Manual gates? Automated?'
+                                { q: 'Deployment frequency target: Daily? Weekly? Continuous?', tip: 'More frequent = smaller changes = lower risk. Target at least weekly. Elite teams deploy multiple times daily. Frequency indicates CI/CD maturity.' },
+                                { q: 'Deployment strategy: Rolling? Blue-green? Canary? Feature flags?', tip: 'Rolling for stateless services. Blue-green for instant rollback. Canary for gradual rollout with monitoring. Feature flags for decoupling deploy from release.' },
+                                { q: 'Environment progression: Dev → Staging → Production?', tip: 'Each environment should match production as closely as possible. Staging should have production-like data and config. Catch issues before they reach prod.' },
+                                { q: 'Infrastructure as Code: Terraform? CloudFormation? Pulumi?', tip: 'Terraform for multi-cloud or cloud-agnostic. CloudFormation for AWS-only. Pulumi for programming language approach. IaC is essential—no manual infra changes.' },
+                                { q: 'Container orchestration: Kubernetes? ECS? Nomad?', tip: 'Kubernetes is the standard but complex. ECS is simpler for AWS. Nomad is lightweight alternative. Match complexity to team capability.' },
+                                { q: 'Database migration strategy: How applied? Rollback plan?', tip: 'Migrations should be backward compatible. Apply before deploying new code. Test rollback path. Tools: Flyway, Alembic, Rails migrations.' },
+                                { q: 'Configuration management: Environment variables? Secrets manager?', tip: 'Environment variables for non-sensitive config. Secrets manager (AWS Secrets Manager, HashiCorp Vault) for sensitive data. Never commit secrets.' },
+                                { q: 'Deployment approval process: Manual gates? Automated?', tip: 'Automate as much as possible. Manual gates for production if required by compliance. Keep approval friction low or teams will work around it.' }
                             ]
                         },
                         {
                             title: 'Release Management',
                             description: 'Control and manage releases safely.',
                             questions: [
-                                'Feature flags system: LaunchDarkly? Unleash? Custom?',
-                                'Rollback strategy: Automated? Manual? Time to rollback?',
-                                'Hotfix process: Emergency deployment path?',
-                                'Release notes: Automated generation? Changelog format?',
-                                'Deployment windows: Any restricted times?',
-                                'Smoke tests post-deployment: What\'s verified?',
-                                'Deployment metrics: Success rate? Frequency? Lead time?',
-                                'Progressive rollout: Percentage-based? User segment-based?'
+                                { q: 'Feature flags system: LaunchDarkly? Unleash? Custom?', tip: 'LaunchDarkly for enterprise features. Unleash is open source. Custom is fine for simple needs. Feature flags enable safe deployment of incomplete features.' },
+                                { q: 'Rollback strategy: Automated? Manual? Time to rollback?', tip: 'Aim for < 5 minute rollback. Automated rollback on health check failures. Keep previous version deployable. Practice rollbacks regularly.' },
+                                { q: 'Hotfix process: Emergency deployment path?', tip: 'Hotfixes should bypass some gates but not all. Direct-to-production branch with expedited review. Document what was skipped. Backport to main branch.' },
+                                { q: 'Release notes: Automated generation? Changelog format?', tip: 'Generate from commit messages or PR descriptions. Keep a Changelog format is standard. Automate with tools like semantic-release or release-please.' },
+                                { q: 'Deployment windows: Any restricted times?', tip: 'Avoid deploying before weekends or holidays. Define freeze periods for high-traffic events. Consider time zones for global teams.' },
+                                { q: 'Smoke tests post-deployment: What\'s verified?', tip: 'Run critical path tests immediately after deploy. Health checks, key user journeys, critical integrations. Automated smoke tests enable faster feedback.' },
+                                { q: 'Deployment metrics: Success rate? Frequency? Lead time?', tip: 'Track DORA metrics: deployment frequency, lead time, change failure rate, MTTR. These indicate CI/CD health. Aim for elite performance over time.' },
+                                { q: 'Progressive rollout: Percentage-based? User segment-based?', tip: 'Start with 1-5% of traffic, monitor, then expand. User segment rollouts (beta users, employees first) for new features. Automate promotion based on metrics.' }
                             ]
                         }
                     ]
@@ -761,42 +767,42 @@
                             title: 'Failure Modes',
                             description: 'Identify what can go wrong and assess the impact.',
                             questions: [
-                                'What are the single points of failure?',
-                                'What happens when each component fails?',
-                                'What are the cascading failure risks?',
-                                'Can we degrade gracefully? How? Which features?',
-                                'What\'s the blast radius of each failure?',
-                                'Which failures are acceptable? Which are catastrophic?',
-                                'Dependency failure impact: What if each dependency is down?',
-                                'Data corruption scenarios: Detection? Recovery?'
+                                { q: 'What are the single points of failure?', tip: 'Any component where failure causes system-wide outage. Databases, load balancers, DNS. Design for redundancy in critical paths.' },
+                                { q: 'What happens when each component fails?', tip: 'Map each failure scenario. Does the system degrade gracefully or crash completely? Document expected behavior for each failure type.' },
+                                { q: 'What are the cascading failure risks?', tip: 'One failure triggering others. Database slowdown → request backup → memory exhaustion → crash. Use circuit breakers to prevent cascades.' },
+                                { q: 'Can we degrade gracefully? How? Which features?', tip: 'Identify non-critical features that can be disabled. Show cached data if real-time unavailable. Disable recommendations before checkout.' },
+                                { q: 'What\'s the blast radius of each failure?', tip: 'How many users affected? What percentage of functionality lost? Contain failures through isolation (bulkheads, separate deployments).' },
+                                { q: 'Which failures are acceptable? Which are catastrophic?', tip: 'Some failures are tolerable (slow images) while others aren\'t (data loss, security breach). Prioritize prevention for catastrophic failures.' },
+                                { q: 'Dependency failure impact: What if each dependency is down?', tip: 'List every external dependency. What happens if payment provider is down? Email service? Analytics? Have fallbacks for critical dependencies.' },
+                                { q: 'Data corruption scenarios: Detection? Recovery?', tip: 'How would you detect corrupted data? Checksums, validation rules, anomaly detection. Recovery requires good backups and audit logs.' }
                             ]
                         },
                         {
                             title: 'Resilience Patterns',
                             description: 'Implement patterns to handle failures gracefully.',
                             questions: [
-                                'Circuit breakers: Where? What thresholds? Fallback behavior?',
-                                'Retry logic: Where? What backoff strategy? Max attempts?',
-                                'Timeouts: What values? Connection vs read timeouts?',
-                                'Bulkheads: Resource isolation between components?',
-                                'Rate limiting: Where? What limits? Per user? Per IP?',
-                                'Load shedding: Priority of requests when overloaded?',
-                                'Fallback strategies: Cached responses? Default values? Degraded mode?',
-                                'Health checks: Liveness? Readiness? Dependencies included?'
+                                { q: 'Circuit breakers: Where? What thresholds? Fallback behavior?', tip: 'Circuit breakers prevent repeated calls to failing services. Typical threshold: 50% failure rate over 10 requests. Fallback to cache or default.' },
+                                { q: 'Retry logic: Where? What backoff strategy? Max attempts?', tip: 'Retry transient failures only. Exponential backoff with jitter prevents thundering herd. 3 retries typical. Don\'t retry non-idempotent operations blindly.' },
+                                { q: 'Timeouts: What values? Connection vs read timeouts?', tip: 'Every external call needs a timeout. Connection timeout: 1-5s. Read timeout: depends on operation. Without timeouts, threads hang forever.' },
+                                { q: 'Bulkheads: Resource isolation between components?', tip: 'Separate thread pools, connection pools, and resources. One slow feature shouldn\'t consume all resources. Like ship compartments that limit flooding.' },
+                                { q: 'Rate limiting: Where? What limits? Per user? Per IP?', tip: 'Protect against abuse and traffic spikes. Rate limit at API gateway and within services. Per-user is fairest; per-IP can be gamed.' },
+                                { q: 'Load shedding: Priority of requests when overloaded?', tip: 'When overwhelmed, reject low-priority requests to serve high-priority ones. Health checks > paid features > free features.' },
+                                { q: 'Fallback strategies: Cached responses? Default values? Degraded mode?', tip: 'When primary fails, have a plan B. Return cached data, static defaults, or simplified functionality. Users prefer partial service over error pages.' },
+                                { q: 'Health checks: Liveness? Readiness? Dependencies included?', tip: 'Liveness: is the process running? Readiness: can it handle traffic? Include critical dependencies in readiness. Don\'t fail liveness for transient issues.' }
                             ]
                         },
                         {
                             title: 'Recovery & Redundancy',
                             description: 'Design mechanisms to recover quickly and prevent data loss.',
                             questions: [
-                                'Backup strategy: What? How often? Where stored? Tested when?',
-                                'Point-in-time recovery capability?',
-                                'Disaster recovery plan: Documented? Tested? RTO/RPO met?',
-                                'Redundancy: Active-active? Active-passive? Multi-region?',
-                                'Failover process: Automatic? Manual? DNS-based?',
-                                'Data replication: Sync? Async? Lag tolerance?',
-                                'Incident response process: Runbooks? On-call rotation?',
-                                'Post-incident review process: Blameless? Action items tracked?'
+                                { q: 'Backup strategy: What? How often? Where stored? Tested when?', tip: 'Back up all critical data. Frequency based on RPO. Store backups in different region/account. Test restores quarterly—untested backups fail.' },
+                                { q: 'Point-in-time recovery capability?', tip: 'PITR allows recovery to any moment (e.g., before a bad deploy). Essential for databases. Typically uses continuous WAL/binlog archiving.' },
+                                { q: 'Disaster recovery plan: Documented? Tested? RTO/RPO met?', tip: 'Written DR plan with clear steps. Test it—plans that aren\'t tested don\'t work under pressure. Verify RTO/RPO requirements are actually achievable.' },
+                                { q: 'Redundancy: Active-active? Active-passive? Multi-region?', tip: 'Active-active: both serve traffic (complex but no failover delay). Active-passive: standby takes over on failure. Multi-region for geographic resilience.' },
+                                { q: 'Failover process: Automatic? Manual? DNS-based?', tip: 'Automatic failover is faster but risky if misconfigured. Manual gives control but delays recovery. DNS failover is simple but slow (TTL propagation).' },
+                                { q: 'Data replication: Sync? Async? Lag tolerance?', tip: 'Sync replication: zero data loss but higher latency. Async: potential data loss but better performance. Know your RPO tolerance.' },
+                                { q: 'Incident response process: Runbooks? On-call rotation?', tip: 'Documented runbooks for common incidents. Clear on-call rotation with escalation paths. Practice incidents—don\'t discover gaps during real outages.' },
+                                { q: 'Post-incident review process: Blameless? Action items tracked?', tip: 'Blameless post-mortems focus on systems, not people. Track action items to completion. Share learnings across the organization.' }
                             ]
                         }
                     ]
@@ -811,56 +817,56 @@
                             title: 'Authentication & Authorization',
                             description: 'Define how users and services prove identity and access resources.',
                             questions: [
-                                'Authentication method: OAuth2? SAML? OIDC? API keys?',
-                                'Identity provider: Build vs buy? (Auth0, Okta, Cognito, Keycloak)',
-                                'Multi-factor authentication: Required? Which factors?',
-                                'Session management: Tokens? Cookies? Expiration policy?',
-                                'Authorization model: RBAC? ABAC? Policy-based?',
-                                'Permission granularity: Resource-level? Field-level?',
-                                'Service-to-service auth: mTLS? Service accounts? JWT?',
-                                'API authentication: API keys? OAuth tokens? Both?'
+                                { q: 'Authentication method: OAuth2? SAML? OIDC? API keys?', tip: 'OAuth2/OIDC for modern web apps. SAML for enterprise SSO. API keys for simple service auth. Don\'t build your own crypto or auth protocols.' },
+                                { q: 'Identity provider: Build vs buy? (Auth0, Okta, Cognito, Keycloak)', tip: 'Buy for most cases—auth is hard to get right. Auth0/Okta for SaaS. Cognito for AWS. Keycloak if you need self-hosted. Building is risky and expensive.' },
+                                { q: 'Multi-factor authentication: Required? Which factors?', tip: 'MFA for sensitive operations. TOTP apps (Google Authenticator) are standard. SMS is weak but better than nothing. Hardware keys for high security.' },
+                                { q: 'Session management: Tokens? Cookies? Expiration policy?', tip: 'JWTs for stateless APIs. Cookies for web apps (with HttpOnly, Secure, SameSite). Short expiration with refresh tokens. Implement logout properly.' },
+                                { q: 'Authorization model: RBAC? ABAC? Policy-based?', tip: 'RBAC (Role-Based) is simplest—users have roles, roles have permissions. ABAC (Attribute-Based) for complex rules. Start simple, add complexity as needed.' },
+                                { q: 'Permission granularity: Resource-level? Field-level?', tip: 'Resource-level (can access document) is usually enough. Field-level (can see salary field) adds complexity. Match granularity to actual requirements.' },
+                                { q: 'Service-to-service auth: mTLS? Service accounts? JWT?', tip: 'mTLS for zero-trust networking. Service accounts with short-lived tokens. JWTs for passing identity across services. Avoid shared secrets between services.' },
+                                { q: 'API authentication: API keys? OAuth tokens? Both?', tip: 'API keys for simple identification. OAuth tokens for user context. API keys are easily leaked—rotate regularly. Use scopes to limit token permissions.' }
                             ]
                         },
                         {
                             title: 'Data Protection',
                             description: 'Protect data at rest, in transit, and in use.',
                             questions: [
-                                'Encryption at rest: What data? What algorithm? Key management?',
-                                'Encryption in transit: TLS version? Certificate management?',
-                                'Secret management: Where stored? (Vault, AWS Secrets Manager, etc.)',
-                                'Key rotation policy: Frequency? Automation?',
-                                'PII handling: Identification? Encryption? Tokenization? Masking?',
-                                'Data classification: Levels? Handling requirements per level?',
-                                'Database encryption: Column-level? Table-level? Disk-level?',
-                                'Backup encryption: Same keys? Different keys?'
+                                { q: 'Encryption at rest: What data? What algorithm? Key management?', tip: 'Encrypt all sensitive data at rest. AES-256 is standard. Use managed key services (AWS KMS, Cloud KMS). Never store keys with the encrypted data.' },
+                                { q: 'Encryption in transit: TLS version? Certificate management?', tip: 'TLS 1.2+ everywhere. Automate certificate renewal (Let\'s Encrypt, ACM). Internal services should use TLS too. Certificate pinning for mobile apps.' },
+                                { q: 'Secret management: Where stored? (Vault, AWS Secrets Manager, etc.)', tip: 'Never commit secrets to code. Use dedicated secret management. HashiCorp Vault for on-prem. Cloud provider secret managers for cloud-native.' },
+                                { q: 'Key rotation policy: Frequency? Automation?', tip: 'Rotate keys regularly (annually minimum). Automate rotation—manual processes get skipped. Ensure old data can still be decrypted during transition.' },
+                                { q: 'PII handling: Identification? Encryption? Tokenization? Masking?', tip: 'Know where PII lives in your system. Encrypt at rest, mask in logs. Tokenization replaces sensitive data with non-sensitive tokens. Minimize PII collection.' },
+                                { q: 'Data classification: Levels? Handling requirements per level?', tip: 'Classify data: public, internal, confidential, restricted. Each level has different handling requirements. Makes security decisions easier.' },
+                                { q: 'Database encryption: Column-level? Table-level? Disk-level?', tip: 'Disk-level is easiest (transparent). Column-level for specific sensitive fields. Consider performance impact. Encryption doesn\'t help if the app is compromised.' },
+                                { q: 'Backup encryption: Same keys? Different keys?', tip: 'Always encrypt backups. Use different keys than primary data if possible. Ensure you can still restore—test decryption of backups regularly.' }
                             ]
                         },
                         {
                             title: 'Security Practices',
                             description: 'Establish security processes and controls.',
                             questions: [
-                                'Security scanning: SAST tools? DAST tools? Container scanning?',
-                                'Dependency vulnerability scanning: Frequency? Remediation SLA?',
-                                'Penetration testing: Frequency? Scope? Internal or third-party?',
-                                'Security review process: When required? Who reviews?',
-                                'OWASP Top 10: How addressed? (Injection, XSS, CSRF, etc.)',
-                                'DDoS protection: CDN? WAF? Rate limiting?',
-                                'Audit logging: What\'s logged? Retention? Access controls?',
-                                'Incident response plan: Security-specific procedures?'
+                                { q: 'Security scanning: SAST tools? DAST tools? Container scanning?', tip: 'SAST (static) scans code for vulnerabilities. DAST (dynamic) tests running applications. Container scanning checks images. Run all in CI pipeline.' },
+                                { q: 'Dependency vulnerability scanning: Frequency? Remediation SLA?', tip: 'Scan dependencies daily. Dependabot, Snyk, or similar. Define SLAs: critical vulnerabilities fixed within 24 hours, high within a week.' },
+                                { q: 'Penetration testing: Frequency? Scope? Internal or third-party?', tip: 'Professional pen testing annually minimum. Third-party for unbiased view. Define scope clearly. Act on findings promptly.' },
+                                { q: 'Security review process: When required? Who reviews?', tip: 'Security review for new features touching auth, payments, PII. Trained security champions or dedicated team. Integrate into PR process.' },
+                                { q: 'OWASP Top 10: How addressed? (Injection, XSS, CSRF, etc.)', tip: 'Know the OWASP Top 10 vulnerabilities. Use frameworks that prevent them by default. Input validation, output encoding, parameterized queries.' },
+                                { q: 'DDoS protection: CDN? WAF? Rate limiting?', tip: 'CDN absorbs traffic at the edge. WAF filters malicious requests. Rate limiting protects against abuse. Layer these defenses.' },
+                                { q: 'Audit logging: What\'s logged? Retention? Access controls?', tip: 'Log security-relevant events: auth, access, changes. Immutable storage. Long retention for compliance. Restrict access to audit logs.' },
+                                { q: 'Incident response plan: Security-specific procedures?', tip: 'Document steps for security incidents. Include containment, investigation, communication. Know when to involve legal and PR. Practice with tabletop exercises.' }
                             ]
                         },
                         {
                             title: 'Privacy & Compliance',
                             description: 'Ensure you handle user data responsibly and legally.',
                             questions: [
-                                'What PII do we collect? Why? Minimization applied?',
-                                'Data retention policy: How long? Automated deletion?',
-                                'Right to deletion (RTBF): How implemented? Timeline?',
-                                'Data portability: Export format? Delivery method?',
-                                'Consent management: How captured? How honored?',
-                                'Privacy by design: Data flow mapping? Impact assessments?',
-                                'Compliance requirements: GDPR? CCPA? HIPAA? SOC2? PCI-DSS?',
-                                'Third-party data sharing: DPAs in place? Purpose limitations?'
+                                { q: 'What PII do we collect? Why? Minimization applied?', tip: 'Inventory all personal data collected. Question if each piece is necessary. Data you don\'t collect can\'t be breached. Minimize collection.' },
+                                { q: 'Data retention policy: How long? Automated deletion?', tip: 'Define retention periods for each data type. Automate deletion—manual processes are forgotten. Shorter retention reduces risk and storage costs.' },
+                                { q: 'Right to deletion (RTBF): How implemented? Timeline?', tip: 'Users can request data deletion (GDPR, CCPA). Implement deletion across all systems including backups. 30-day response typical.' },
+                                { q: 'Data portability: Export format? Delivery method?', tip: 'Users can request their data in portable format. Common formats: JSON, CSV. Secure delivery method. Automate if possible.' },
+                                { q: 'Consent management: How captured? How honored?', tip: 'Clear consent for data collection. Record when consent was given. Honor withdrawal of consent. Cookie banners, privacy preferences.' },
+                                { q: 'Privacy by design: Data flow mapping? Impact assessments?', tip: 'Map where personal data flows in your system. Privacy impact assessments for new features. Consider privacy from the start, not after.' },
+                                { q: 'Compliance requirements: GDPR? CCPA? HIPAA? SOC2? PCI-DSS?', tip: 'Know which regulations apply to you. GDPR for EU users. CCPA for California. HIPAA for health data. SOC2 for B2B trust. PCI-DSS for payments.' },
+                                { q: 'Third-party data sharing: DPAs in place? Purpose limitations?', tip: 'Data Processing Agreements with all vendors handling user data. Define purpose and limitations. Know where your data goes.' }
                             ]
                         }
                     ]
@@ -875,56 +881,56 @@
                             title: 'Monitoring & Metrics',
                             description: 'Define what to measure and how to know when things go wrong.',
                             questions: [
-                                'Key metrics: What are the Golden Signals? (Latency, traffic, errors, saturation)',
-                                'Business metrics: What do stakeholders need to see?',
-                                'Infrastructure metrics: CPU, memory, disk, network?',
-                                'Application metrics: Request rates, response times, queue depths?',
-                                'Custom metrics: What domain-specific metrics?',
-                                'Metrics platform: Prometheus? Datadog? CloudWatch? New Relic?',
-                                'Dashboards: What views? Who\'s the audience?',
-                                'SLIs/SLOs/SLAs defined? Error budgets calculated?'
+                                { q: 'Key metrics: What are the Golden Signals? (Latency, traffic, errors, saturation)', tip: 'Google\'s Golden Signals: latency (response time), traffic (requests/sec), errors (failure rate), saturation (resource usage). Start here for any service.' },
+                                { q: 'Business metrics: What do stakeholders need to see?', tip: 'Revenue, conversions, active users, feature adoption. Connect technical metrics to business outcomes. Dashboard for non-technical stakeholders.' },
+                                { q: 'Infrastructure metrics: CPU, memory, disk, network?', tip: 'Basic resource metrics for capacity planning. Track trends over time. Set alerts before exhaustion (80% disk, 90% memory).' },
+                                { q: 'Application metrics: Request rates, response times, queue depths?', tip: 'Application-level metrics show business health. Queue depths indicate backpressure. Response time percentiles (P50, P95, P99) matter more than averages.' },
+                                { q: 'Custom metrics: What domain-specific metrics?', tip: 'Metrics specific to your business: orders processed, messages sent, ML model accuracy. These often matter most for understanding system health.' },
+                                { q: 'Metrics platform: Prometheus? Datadog? CloudWatch? New Relic?', tip: 'Prometheus for self-hosted (free, powerful). Datadog/New Relic for full-featured SaaS. CloudWatch for AWS-native. Consider cost at scale.' },
+                                { q: 'Dashboards: What views? Who\'s the audience?', tip: 'Different dashboards for different audiences. Executive: business metrics. Engineers: technical deep-dives. On-call: actionable alerts. Keep dashboards focused.' },
+                                { q: 'SLIs/SLOs/SLAs defined? Error budgets calculated?', tip: 'SLI: what you measure. SLO: target (99.9% availability). SLA: contractual commitment. Error budget = allowed failures. Enables risk-based decision making.' }
                             ]
                         },
                         {
                             title: 'Alerting',
                             description: 'Define when and how to notify the team of issues.',
                             questions: [
-                                'Alerting thresholds: What triggers alerts? Avoid alert fatigue?',
-                                'Severity levels: P1/P2/P3? Response time expectations?',
-                                'Notification channels: PagerDuty? Slack? Email? Phone?',
-                                'Escalation policy: Who\'s paged? When to escalate?',
-                                'On-call rotation: Schedule? Compensation? Handoff process?',
-                                'Alert runbooks: Documented response procedures?',
-                                'Alert aggregation: Grouping related alerts?',
-                                'Maintenance windows: Silencing alerts during deployments?'
+                                { q: 'Alerting thresholds: What triggers alerts? Avoid alert fatigue?', tip: 'Alert on symptoms (user impact), not causes (high CPU). Avoid noisy alerts—each should be actionable. If you ignore alerts, they\'re too sensitive.' },
+                                { q: 'Severity levels: P1/P2/P3? Response time expectations?', tip: 'P1: service down, immediate response. P2: degraded, respond within hours. P3: minor, next business day. Clear definitions prevent confusion.' },
+                                { q: 'Notification channels: PagerDuty? Slack? Email? Phone?', tip: 'PagerDuty/Opsgenie for on-call management. Slack for team awareness. Phone for critical alerts. Escalate through channels based on severity.' },
+                                { q: 'Escalation policy: Who\'s paged? When to escalate?', tip: 'Clear escalation path: primary on-call → secondary → manager → leadership. Auto-escalate if not acknowledged. Document who can make what decisions.' },
+                                { q: 'On-call rotation: Schedule? Compensation? Handoff process?', tip: 'Fair rotation schedule. Compensate for on-call burden. Handoff process: share context, ongoing issues, recent changes. On-call shouldn\'t burn people out.' },
+                                { q: 'Alert runbooks: Documented response procedures?', tip: 'Every alert should link to a runbook. What to check, how to mitigate, when to escalate. Reduces MTTR and knowledge dependency.' },
+                                { q: 'Alert aggregation: Grouping related alerts?', tip: 'Group related alerts to reduce noise. One incident, one notification. Correlation helps identify root cause faster.' },
+                                { q: 'Maintenance windows: Silencing alerts during deployments?', tip: 'Silence known-noisy alerts during maintenance. But keep critical alerts active. Auto-end maintenance windows to prevent forgotten silences.' }
                             ]
                         },
                         {
                             title: 'Logging & Tracing',
                             description: 'Enable debugging and understanding of system behavior.',
                             questions: [
-                                'Logging format: Structured (JSON)? Log levels?',
-                                'Log aggregation: ELK? Splunk? CloudWatch Logs? Loki?',
-                                'Log retention: How long? Tiered storage?',
-                                'Distributed tracing: OpenTelemetry? Jaeger? Zipkin? X-Ray?',
-                                'Trace sampling strategy: Head-based? Tail-based? Rate?',
-                                'Correlation IDs: How propagated across services?',
-                                'What to log: Requests? Errors? Debug info? PII concerns?',
-                                'Log-based alerting: Error rate spikes? Specific patterns?'
+                                { q: 'Logging format: Structured (JSON)? Log levels?', tip: 'Structured logging (JSON) enables querying and analysis. Standard log levels: DEBUG, INFO, WARN, ERROR. Include request IDs, user IDs, timestamps.' },
+                                { q: 'Log aggregation: ELK? Splunk? CloudWatch Logs? Loki?', tip: 'ELK (Elasticsearch, Logstash, Kibana) is powerful but complex. Splunk is expensive but feature-rich. CloudWatch for AWS. Loki for Prometheus ecosystem.' },
+                                { q: 'Log retention: How long? Tiered storage?', tip: 'Hot storage for recent logs (7-30 days). Cold storage for compliance/debugging (1-7 years). Archive to cheaper storage. Define retention by log type.' },
+                                { q: 'Distributed tracing: OpenTelemetry? Jaeger? Zipkin? X-Ray?', tip: 'Tracing shows request flow across services. OpenTelemetry is the emerging standard. Essential for debugging microservices. Instrument all services.' },
+                                { q: 'Trace sampling strategy: Head-based? Tail-based? Rate?', tip: 'Tracing everything is expensive. Head-based sampling decides upfront. Tail-based keeps interesting traces. Sample 1-10% typically, always keep errors.' },
+                                { q: 'Correlation IDs: How propagated across services?', tip: 'Unique ID per request, passed through all services. Include in logs, traces, and error reports. Makes debugging distributed systems possible.' },
+                                { q: 'What to log: Requests? Errors? Debug info? PII concerns?', tip: 'Log all requests (summarized), all errors (detailed), key business events. Never log passwords, tokens, or raw PII. Mask sensitive data.' },
+                                { q: 'Log-based alerting: Error rate spikes? Specific patterns?', tip: 'Alert on unusual error patterns, not individual errors. Spike in 500s, unusual exception types, security-relevant events. Complements metric alerting.' }
                             ]
                         },
                         {
                             title: 'Debugging & Profiling',
                             description: 'Tools and processes for investigating issues.',
                             questions: [
-                                'APM tool: Datadog? New Relic? Dynatrace?',
-                                'Profiling: CPU? Memory? When enabled?',
-                                'Error tracking: Sentry? Rollbar? Bugsnag?',
-                                'How to debug production issues safely?',
-                                'Feature flags for debug modes?',
-                                'Access to production logs: Who? How? Audit trail?',
-                                'Reproduction environments: Can we replicate prod issues?',
-                                'Post-mortem process: Template? Frequency? Tracking?'
+                                { q: 'APM tool: Datadog? New Relic? Dynatrace?', tip: 'Application Performance Monitoring combines metrics, traces, and logs. Expensive but powerful for complex systems. Essential for production debugging.' },
+                                { q: 'Profiling: CPU? Memory? When enabled?', tip: 'CPU profiling finds slow code. Memory profiling finds leaks. Enable on-demand or continuously with low overhead. Flame graphs visualize results.' },
+                                { q: 'Error tracking: Sentry? Rollbar? Bugsnag?', tip: 'Error tracking groups similar errors, shows trends, alerts on new issues. Sentry is popular open-source option. Integrates with issue trackers.' },
+                                { q: 'How to debug production issues safely?', tip: 'Read-only access to production. Replay requests in staging. Feature flags to disable problematic code. Never debug by changing production code.' },
+                                { q: 'Feature flags for debug modes?', tip: 'Enable verbose logging or debug endpoints per-user or per-request. Useful for investigating specific issues without affecting all users.' },
+                                { q: 'Access to production logs: Who? How? Audit trail?', tip: 'Limit production access to those who need it. JIT (Just-In-Time) access with approval. Audit all access. Principle of least privilege.' },
+                                { q: 'Reproduction environments: Can we replicate prod issues?', tip: 'Staging environment with production-like data. Ability to replay requests. Some issues only appear at scale—consider load testing environments.' },
+                                { q: 'Post-mortem process: Template? Frequency? Tracking?', tip: 'Post-mortem after every significant incident. Blameless culture. Track action items to completion. Share learnings. Build institutional memory.' }
                             ]
                         }
                     ]
@@ -939,42 +945,42 @@
                             title: 'Cost Estimation',
                             description: 'Estimate infrastructure and operational costs.',
                             questions: [
-                                'Compute costs: Instance types? Sizing? Reserved vs on-demand?',
-                                'Storage costs: Data volume? Storage tiers? Growth rate?',
-                                'Network costs: Data transfer? Cross-region? CDN?',
-                                'Database costs: Instance size? Storage? IOPS? Replicas?',
-                                'Third-party service costs: APIs? SaaS tools? Licenses?',
-                                'Total monthly cost estimate? Annual projection?',
-                                'Cost per user/request/transaction?',
-                                'Budget limits and alerts?'
+                                { q: 'Compute costs: Instance types? Sizing? Reserved vs on-demand?', tip: 'Start with on-demand for flexibility, move to reserved for stable workloads (30-60% savings). Right-size based on actual usage, not guesses.' },
+                                { q: 'Storage costs: Data volume? Storage tiers? Growth rate?', tip: 'Estimate data growth over 1-3 years. Use tiered storage: hot (frequent access), warm (occasional), cold (archive). Lifecycle policies automate transitions.' },
+                                { q: 'Network costs: Data transfer? Cross-region? CDN?', tip: 'Data transfer costs surprise many teams. Cross-region transfer is expensive. CDN reduces origin traffic and improves latency. Track egress carefully.' },
+                                { q: 'Database costs: Instance size? Storage? IOPS? Replicas?', tip: 'Databases are often the largest cost. IOPS can be expensive. Read replicas add cost but improve performance. Consider serverless for variable workloads.' },
+                                { q: 'Third-party service costs: APIs? SaaS tools? Licenses?', tip: 'Sum up all third-party costs: APIs (per-call pricing), SaaS tools (per-seat), licenses. These can exceed infrastructure costs. Negotiate enterprise agreements.' },
+                                { q: 'Total monthly cost estimate? Annual projection?', tip: 'Build a cost model in a spreadsheet. Include all components. Add 20-30% buffer for unknowns. Project growth scenarios.' },
+                                { q: 'Cost per user/request/transaction?', tip: 'Unit economics matter for business viability. Know your cost per user, per transaction, per 1000 requests. Benchmark against industry standards.' },
+                                { q: 'Budget limits and alerts?', tip: 'Set budget alerts at 50%, 75%, 90%, 100%. Anomaly detection for unexpected spikes. Review weekly/monthly. No surprises.' }
                             ]
                         },
                         {
                             title: 'Cost Optimization',
                             description: 'Strategies to reduce and control costs.',
                             questions: [
-                                'Reserved instances/savings plans: Commitment level?',
-                                'Spot/preemptible instances: Where applicable?',
-                                'Auto-scaling policies: Scale-down aggressive enough?',
-                                'Right-sizing: Regular review of resource utilization?',
-                                'Storage lifecycle policies: Auto-archive? Auto-delete?',
-                                'Caching ROI: Cost savings from caching layer?',
-                                'Multi-tenancy efficiency: Resource sharing between tenants?',
-                                'Development/staging cost controls: Shutdown schedules?'
+                                { q: 'Reserved instances/savings plans: Commitment level?', tip: '1-year commits: 30-40% savings. 3-year: 50-60% but risky. Start with 1-year for predictable workloads. Savings plans are more flexible than reserved instances.' },
+                                { q: 'Spot/preemptible instances: Where applicable?', tip: 'Spot instances: 60-90% savings but can be terminated. Good for: batch jobs, CI/CD, stateless workers. Not for: databases, user-facing services.' },
+                                { q: 'Auto-scaling policies: Scale-down aggressive enough?', tip: 'Most teams scale up well but scale down too slowly. Set aggressive scale-down policies. Target utilization 60-70%, not 30%.' },
+                                { q: 'Right-sizing: Regular review of resource utilization?', tip: 'Review utilization monthly. Most instances are over-provisioned. Use cloud provider tools (AWS Compute Optimizer, GCP Recommender). Right-size before reserving.' },
+                                { q: 'Storage lifecycle policies: Auto-archive? Auto-delete?', tip: 'Automate storage tiering: move to infrequent access after 30 days, glacier after 90, delete after retention period. Forgotten data costs money.' },
+                                { q: 'Caching ROI: Cost savings from caching layer?', tip: 'Caching reduces database load and API calls. Calculate: cache cost vs. savings from reduced compute/database. Good caches pay for themselves 10x.' },
+                                { q: 'Multi-tenancy efficiency: Resource sharing between tenants?', tip: 'Shared resources are more efficient than per-tenant isolation. Balance efficiency against isolation requirements. Noisy neighbor mitigation is key.' },
+                                { q: 'Development/staging cost controls: Shutdown schedules?', tip: 'Dev/staging environments often run 24/7 but are used 8-10 hours/day. Auto-shutdown schedules can cut non-prod costs 60%. Use smaller instances for non-prod.' }
                             ]
                         },
                         {
                             title: 'Cost Monitoring',
                             description: 'Track and manage costs over time.',
                             questions: [
-                                'Cost allocation tags: By team? By feature? By environment?',
-                                'Cost anomaly detection: Alerts for unexpected spikes?',
-                                'Showback/chargeback model: How costs attributed to teams?',
-                                'Regular cost review: Frequency? Who\'s involved?',
-                                'FinOps practices: Dedicated role? Tools?',
-                                'Cost forecasting: Based on growth projections?',
-                                'Optimization opportunities tracking?',
-                                'Vendor contract reviews: Annual? Negotiation strategy?'
+                                { q: 'Cost allocation tags: By team? By feature? By environment?', tip: 'Tag everything: team, project, environment, cost center. Enables showback/chargeback. Enforce tagging through policies. Untagged resources get attention.' },
+                                { q: 'Cost anomaly detection: Alerts for unexpected spikes?', tip: 'Cloud providers offer anomaly detection. Alert on unusual spending patterns. Catch runaway costs before month-end surprise. Daily cost emails help awareness.' },
+                                { q: 'Showback/chargeback model: How costs attributed to teams?', tip: 'Showback: inform teams of costs. Chargeback: teams pay from their budget. Start with showback to build awareness. Chargeback drives ownership.' },
+                                { q: 'Regular cost review: Frequency? Who\'s involved?', tip: 'Monthly cost reviews minimum. Include engineering leads, finance, product. Review top spending categories, anomalies, and optimization opportunities.' },
+                                { q: 'FinOps practices: Dedicated role? Tools?', tip: 'FinOps combines finance, ops, and engineering for cloud cost management. Dedicated FinOps engineer at scale. Tools: CloudHealth, Spot.io, native cloud tools.' },
+                                { q: 'Cost forecasting: Based on growth projections?', tip: 'Forecast costs based on user growth, data growth, feature releases. Update forecasts quarterly. Finance needs predictability for budgeting.' },
+                                { q: 'Optimization opportunities tracking?', tip: 'Track identified savings opportunities, implementation status, and realized savings. Prioritize by effort vs. impact. Celebrate wins to build momentum.' },
+                                { q: 'Vendor contract reviews: Annual? Negotiation strategy?', tip: 'Review contracts annually before renewal. Negotiate based on usage data and market alternatives. Committed spend deals can save 20-30%. Get quotes from competitors.' }
                             ]
                         }
                     ]
@@ -989,42 +995,42 @@
                             title: 'Team Capabilities',
                             description: 'Assess whether your team can build and maintain this system.',
                             questions: [
-                                'Team size: Current? 6 months? 1 year?',
-                                'Team expertise: Strengths? Gaps? Training needed?',
-                                'Learning curve: Can the team realistically support this?',
-                                'Cognitive load: Is this architecture too complex?',
-                                'Hiring plan: What roles needed? Timeline?',
-                                'Contractor/consultant needs: What expertise to bring in?',
-                                'Knowledge concentration risk: Bus factor?',
-                                'Cross-training plan: Reducing single points of knowledge?'
+                                { q: 'Team size: Current? 6 months? 1 year?', tip: 'Architecture should match team size. Microservices with 3 people is usually a mistake. Plan for realistic team growth, not optimistic projections.' },
+                                { q: 'Team expertise: Strengths? Gaps? Training needed?', tip: 'Honest assessment of skills. Don\'t adopt Kubernetes if no one knows it. Training takes time. Gaps require hiring or consultants.' },
+                                { q: 'Learning curve: Can the team realistically support this?', tip: 'New technology = learning curve = slower delivery initially. Factor in ramp-up time. Complex architecture needs experienced engineers.' },
+                                { q: 'Cognitive load: Is this architecture too complex?', tip: 'If engineers can\'t hold the system in their head, it\'s too complex. Simplify. Team Topologies: minimize cognitive load per team.' },
+                                { q: 'Hiring plan: What roles needed? Timeline?', tip: 'Hiring is slow (3-6 months). Plan ahead. Define roles clearly. Senior engineers are hard to find. Consider contractors for specific skills.' },
+                                { q: 'Contractor/consultant needs: What expertise to bring in?', tip: 'Consultants for: initial architecture, specific technology, knowledge transfer. Set clear goals and timelines. Don\'t create permanent dependencies.' },
+                                { q: 'Knowledge concentration risk: Bus factor?', tip: 'Bus factor: how many people can leave before system becomes unmaintainable? Aim for 2+ people knowing each critical area. Document tribal knowledge.' },
+                                { q: 'Cross-training plan: Reducing single points of knowledge?', tip: 'Pair programming, rotation, documentation, code reviews. No single-owner code. Everyone should be able to deploy. Reduce hero culture.' }
                             ]
                         },
                         {
                             title: 'Team Structure',
                             description: 'Align architecture with organizational structure.',
                             questions: [
-                                'Conway\'s Law: Does architecture match team structure?',
-                                'Team autonomy: Can teams deploy independently?',
-                                'Service ownership: Clear owners for each component?',
-                                'On-call responsibility: Who owns production issues?',
-                                'Communication patterns: Sync? Async? Meeting cadence?',
-                                'Decision-making process: RFCs? ADRs? Architecture review?',
-                                'Cross-team dependencies: How managed?',
-                                'Platform team: Dedicated infrastructure/platform support?'
+                                { q: 'Conway\'s Law: Does architecture match team structure?', tip: 'Systems mirror communication structures. If you want independent services, you need independent teams. Reorganize teams to match desired architecture.' },
+                                { q: 'Team autonomy: Can teams deploy independently?', tip: 'Autonomous teams are faster. Minimize dependencies. Clear interfaces between teams. If every change needs coordination, you\'re coupled.' },
+                                { q: 'Service ownership: Clear owners for each component?', tip: 'Every service needs an owner. Ownership means: on-call, roadmap, tech debt decisions. Unowned services rot. Explicit ownership in docs and code.' },
+                                { q: 'On-call responsibility: Who owns production issues?', tip: 'You build it, you run it. Teams own their services end-to-end. Clear escalation paths. Fair rotation. Don\'t burn out your on-call engineers.' },
+                                { q: 'Communication patterns: Sync? Async? Meeting cadence?', tip: 'Too many meetings kill productivity. Async-first (docs, Slack) with targeted sync meetings. Cross-team syncs for dependencies. Document decisions.' },
+                                { q: 'Decision-making process: RFCs? ADRs? Architecture review?', tip: 'RFCs for proposals, ADRs for decisions. Architecture review for significant changes. Balance process with speed. Not everything needs a meeting.' },
+                                { q: 'Cross-team dependencies: How managed?', tip: 'Dependencies slow teams down. Minimize them through clear interfaces. Track dependencies explicitly. Prioritize unblocking other teams.' },
+                                { q: 'Platform team: Dedicated infrastructure/platform support?', tip: 'Platform teams provide self-service infrastructure: CI/CD, observability, databases. Enables product teams to focus on product. Needs investment at scale.' }
                             ]
                         },
                         {
                             title: 'Operational Burden',
                             description: 'Consider the ongoing cost of running and evolving the system.',
                             questions: [
-                                'Deployment frequency: Current? Target?',
-                                'Deployment complexity: Steps? Automation level?',
-                                'Incident frequency: Current? Target?',
-                                'MTTR (Mean Time to Recovery): Current? Target?',
-                                'Technical debt management: How tracked? When addressed?',
-                                'Toil reduction: Automation opportunities?',
-                                'Documentation maintenance: Who? How kept current?',
-                                'Onboarding time: How long for new team members?'
+                                { q: 'Deployment frequency: Current? Target?', tip: 'Deploy frequency is a health metric. Daily or more is healthy. Weekly is okay. Monthly is a smell. Blocked deployments indicate problems.' },
+                                { q: 'Deployment complexity: Steps? Automation level?', tip: 'Deployments should be boring—one click or automatic. Complex deployment procedures are risky. Automate everything. Document what remains manual.' },
+                                { q: 'Incident frequency: Current? Target?', tip: 'Track incident rate. High frequency = systemic issues. Categorize by type and severity. Set targets and track trends. Each incident is a learning opportunity.' },
+                                { q: 'MTTR (Mean Time to Recovery): Current? Target?', tip: 'MTTR matters more than MTBF. Can you recover quickly? Target < 1 hour for major incidents. Runbooks, automation, and practice improve MTTR.' },
+                                { q: 'Technical debt management: How tracked? When addressed?', tip: 'Track tech debt in backlog. Allocate 10-20% of capacity for debt reduction. Address debt that slows development. Don\'t let it accumulate indefinitely.' },
+                                { q: 'Toil reduction: Automation opportunities?', tip: 'Toil: repetitive, manual, automatable work. Track toil. Automate it. Engineers should spend time on engineering, not repetitive operations.' },
+                                { q: 'Documentation maintenance: Who? How kept current?', tip: 'Outdated docs are worse than no docs. Doc owners for each area. Update docs as part of PR process. Regular doc review and cleanup.' },
+                                { q: 'Onboarding time: How long for new team members?', tip: 'Track time-to-productivity for new hires. Target: meaningful contribution in 2-4 weeks. Long onboarding indicates complexity or documentation gaps.' }
                             ]
                         }
                     ]
@@ -1039,42 +1045,42 @@
                             title: 'Change Management',
                             description: 'Plan how to evolve the system safely over time.',
                             questions: [
-                                'What will we learn post-launch that might change things?',
-                                'Which parts are hardest to change later?',
-                                'Which parts should stay flexible?',
-                                'Migration strategy: How do we evolve without downtime?',
-                                'Versioning strategy: APIs? Data schemas? Configurations?',
-                                'Deprecation strategy: How do we sunset old versions?',
-                                'Feature flags: Gradual rollout? A/B testing infrastructure?',
-                                'Database schema evolution: Online migrations? Expand/contract?'
+                                { q: 'What will we learn post-launch that might change things?', tip: 'You will learn a lot after launch: real usage patterns, actual scale, unexpected use cases. Design for learning. Build in flexibility where uncertain.' },
+                                { q: 'Which parts are hardest to change later?', tip: 'Database schema, API contracts, data formats, core domain model. Get these right or plan for migration. Changing foundations is expensive.' },
+                                { q: 'Which parts should stay flexible?', tip: 'UI, business rules, integrations—these change frequently. Design for configurability. Feature flags enable runtime changes without deploys.' },
+                                { q: 'Migration strategy: How do we evolve without downtime?', tip: 'Zero-downtime migrations: expand-contract pattern, parallel running, gradual rollout. Plan migrations before you need them. Test migration scripts.' },
+                                { q: 'Versioning strategy: APIs? Data schemas? Configurations?', tip: 'Version everything that has consumers: APIs, events, configs. Semantic versioning for clarity. Support N-1 at minimum. Plan for deprecation.' },
+                                { q: 'Deprecation strategy: How do we sunset old versions?', tip: 'Clear deprecation policy: announce → warn → soft-fail → remove. Give consumers time. Monitor usage of deprecated features. Don\'t support forever.' },
+                                { q: 'Feature flags: Gradual rollout? A/B testing infrastructure?', tip: 'Feature flags decouple deploy from release. Gradual rollout reduces risk. A/B testing enables experimentation. Clean up old flags regularly.' },
+                                { q: 'Database schema evolution: Online migrations? Expand/contract?', tip: 'Online migrations don\'t lock tables. Expand-contract: add new column, backfill, migrate reads, migrate writes, remove old. Avoid breaking changes.' }
                             ]
                         },
                         {
                             title: 'Scalability Planning',
                             description: 'Anticipate and plan for growth.',
                             questions: [
-                                'What\'s our scale plan? 10x? 100x?',
-                                'Which components will hit limits first?',
-                                'Horizontal vs vertical scaling: Where each applies?',
-                                'Database scaling path: Read replicas? Sharding? NewSQL?',
-                                'Caching scaling: Cluster? Sharding?',
-                                'What architectural changes needed at each scale milestone?',
-                                'Multi-region expansion plan?',
-                                'What would break if we 10x users tomorrow?'
+                                { q: 'What\'s our scale plan? 10x? 100x?', tip: 'Design for 10x current scale. Have a plan for 100x. Don\'t over-engineer for 1000x if you\'re at 1x. Scale when you have real data.' },
+                                { q: 'Which components will hit limits first?', tip: 'Identify bottlenecks before they bite. Usually: database, then compute, then network. Load test to find limits. Plan remediation before hitting them.' },
+                                { q: 'Horizontal vs vertical scaling: Where each applies?', tip: 'Vertical (bigger machines) is simpler but has limits. Horizontal (more machines) is unlimited but complex. Stateless services scale horizontally. Databases are harder.' },
+                                { q: 'Database scaling path: Read replicas? Sharding? NewSQL?', tip: 'Read replicas for read-heavy workloads. Sharding for write-heavy (complex!). NewSQL (CockroachDB, Spanner) for distributed SQL. Each has trade-offs.' },
+                                { q: 'Caching scaling: Cluster? Sharding?', tip: 'Redis Cluster or Memcached pool for scale. Consider cache sharding strategy. Hot keys can be a problem. Plan for cache invalidation at scale.' },
+                                { q: 'What architectural changes needed at each scale milestone?', tip: 'Document: at 10x we need X, at 100x we need Y. Plan major changes before you\'re in crisis mode. Some changes are easier earlier.' },
+                                { q: 'Multi-region expansion plan?', tip: 'Multi-region for: latency, compliance, disaster recovery. Adds significant complexity: data replication, consistency, routing. Don\'t do it prematurely.' },
+                                { q: 'What would break if we 10x users tomorrow?', tip: 'Thought experiment: viral growth tomorrow. What breaks? Rate limits, database connections, third-party API limits. Know your weak points.' }
                             ]
                         },
                         {
                             title: 'Future Considerations',
                             description: 'Think ahead to future needs and opportunities.',
                             questions: [
-                                'What new features are on the roadmap?',
-                                'How does this architecture enable/constrain future products?',
-                                'Technology refresh: When will current choices become obsolete?',
-                                'Vendor lock-in assessment: What\'s the exit cost?',
-                                'Open source vs proprietary: Long-term implications?',
-                                'AI/ML integration: Future data and compute needs?',
-                                'Regulatory changes: Anticipated compliance requirements?',
-                                'Acquisition/integration: How hard to integrate/be integrated?'
+                                { q: 'What new features are on the roadmap?', tip: 'Architecture should enable the roadmap, not block it. Review upcoming features with architecture lens. Identify patterns and shared needs.' },
+                                { q: 'How does this architecture enable/constrain future products?', tip: 'Platforms enable new products. Monolithic designs constrain them. Think beyond current product. What else could you build on this foundation?' },
+                                { q: 'Technology refresh: When will current choices become obsolete?', tip: 'Technologies have lifecycles. Plan for eventual replacement. Avoid deep coupling to specific implementations. Abstract where practical.' },
+                                { q: 'Vendor lock-in assessment: What\'s the exit cost?', tip: 'Some lock-in is okay if benefits are worth it. Know the exit cost. Use abstractions for critical integrations. Portable where strategic, pragmatic elsewhere.' },
+                                { q: 'Open source vs proprietary: Long-term implications?', tip: 'Open source: transparency, portability, community. Proprietary: support, features, integration. Consider long-term viability and community health.' },
+                                { q: 'AI/ML integration: Future data and compute needs?', tip: 'AI/ML needs: data collection, storage, compute (often GPU), model serving. Plan data pipelines even if ML is future. Clean data is valuable.' },
+                                { q: 'Regulatory changes: Anticipated compliance requirements?', tip: 'Regulations are increasing: privacy, data residency, AI governance. Build compliance capabilities early. It\'s easier than retrofitting.' },
+                                { q: 'Acquisition/integration: How hard to integrate/be integrated?', tip: 'M&A happens. How hard to integrate another system? How hard for acquirer to integrate you? Clean architecture and APIs help both scenarios.' }
                             ]
                         }
                     ]
@@ -1262,6 +1268,131 @@
                 URL.revokeObjectURL(url);
             };
 
+            const importMarkdown = (content) => {
+                try {
+                    const newCheckedItems = {};
+                    const newNotes = {};
+                    const newCodeSnippets = {};
+                    const newDiagrams = {};
+                    const newStakeholders = [];
+                    const newReferences = [];
+                    let newProjectName = '';
+
+                    // Extract project name from title
+                    const titleMatch = content.match(/^# Architecture Framework: (.+)$/m);
+                    if (titleMatch) {
+                        newProjectName = titleMatch[1].trim();
+                    }
+
+                    // Extract stakeholders from table
+                    const stakeholderSection = content.match(/## Stakeholders\n\n\| Name \| Role \|\n\|------\|------\|\n([\s\S]*?)(?=\n\n|## |$)/);
+                    if (stakeholderSection) {
+                        const rows = stakeholderSection[1].trim().split('\n');
+                        rows.forEach(row => {
+                            const match = row.match(/\| (.+?) \| (.+?) \|/);
+                            if (match) {
+                                newStakeholders.push({
+                                    id: Date.now() + Math.random(),
+                                    name: match[1].trim(),
+                                    role: match[2].trim() === '-' ? '' : match[2].trim()
+                                });
+                            }
+                        });
+                    }
+
+                    // Extract references
+                    const referencesSection = content.match(/## References\n\n([\s\S]*?)(?=\n---|\n## |$)/);
+                    if (referencesSection) {
+                        const refLines = referencesSection[1].trim().split('\n');
+                        refLines.forEach(line => {
+                            const match = line.match(/- \[(.+?)\]\((.+?)\)/);
+                            if (match) {
+                                newReferences.push({
+                                    id: Date.now() + Math.random(),
+                                    title: match[1],
+                                    url: match[2]
+                                });
+                            }
+                        });
+                    }
+
+                    // Process each phase
+                    framework.forEach(phase => {
+                        phase.sections.forEach((section, sIndex) => {
+                            section.questions.forEach((questionItem, qIndex) => {
+                                const key = `${phase.id}-${sIndex}-${qIndex}`;
+                                const questionText = typeof questionItem === 'string' ? questionItem : questionItem.q;
+
+                                // Escape special regex characters in question text
+                                const escapedQuestion = questionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+                                // Look for the checkbox pattern
+                                const checkboxPattern = new RegExp(`- \\[(x| )\\] ${escapedQuestion}`);
+                                const checkboxMatch = content.match(checkboxPattern);
+
+                                if (checkboxMatch) {
+                                    newCheckedItems[key] = checkboxMatch[1] === 'x';
+
+                                    // Find the position after the checkbox line
+                                    const checkboxIndex = content.indexOf(checkboxMatch[0]);
+                                    const afterCheckbox = content.slice(checkboxIndex + checkboxMatch[0].length);
+
+                                    // Extract answer/note
+                                    const answerMatch = afterCheckbox.match(/^\n\n  \*\*Answer\*\*: ([\s\S]*?)(?=\n\n  \*\*|(?:\n- \[)|(?:\n### )|(?:\n## )|$)/);
+                                    if (answerMatch) {
+                                        newNotes[key] = answerMatch[1].trim();
+                                    }
+
+                                    // Extract code
+                                    const codeMatch = afterCheckbox.match(/^\n\n  \*\*Code\*\*:\n  ```\n([\s\S]*?)\n  ```/);
+                                    if (codeMatch) {
+                                        newCodeSnippets[key] = codeMatch[1].split('\n').map(l => l.replace(/^  /, '')).join('\n');
+                                    }
+
+                                    // Extract diagram
+                                    const diagramMatch = afterCheckbox.match(/\*\*Diagram\*\*:\n  ```mermaid\n([\s\S]*?)\n  ```/);
+                                    if (diagramMatch) {
+                                        newDiagrams[key] = diagramMatch[1].split('\n').map(l => l.replace(/^  /, '')).join('\n');
+                                    }
+                                }
+                            });
+                        });
+                    });
+
+                    // Apply imported data
+                    setProjectName(newProjectName);
+                    setCheckedItems(newCheckedItems);
+                    setNotes(newNotes);
+                    setCodeSnippets(newCodeSnippets);
+                    setDiagrams(newDiagrams);
+                    setStakeholders(newStakeholders);
+                    setReferences(newReferences);
+
+                    return true;
+                } catch (e) {
+                    console.error('Import failed:', e);
+                    return false;
+                }
+            };
+
+            const handleFileImport = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    const success = importMarkdown(content);
+                    if (success) {
+                        alert('Import successful!');
+                    } else {
+                        alert('Import failed. Please check the file format.');
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = ''; // Reset input
+            };
+
             const totalQuestions = framework.reduce((acc, phase) =>
                 acc + phase.sections.reduce((sAcc, section) => sAcc + section.questions.length, 0), 0
             );
@@ -1427,13 +1558,25 @@
 
                                 {/* Controls */}
                                 <div className="space-y-2">
-                                    <button
-                                        onClick={exportNotes}
-                                        className={`w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
-                                    >
-                                        <Download size={16} />
-                                        <span>Export Markdown</span>
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={exportNotes}
+                                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
+                                        >
+                                            <Download size={16} />
+                                            <span>Export</span>
+                                        </button>
+                                        <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}>
+                                            <Upload size={16} />
+                                            <span>Import</span>
+                                            <input
+                                                type="file"
+                                                accept=".md,.markdown,.txt"
+                                                onChange={handleFileImport}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    </div>
 
                                     <div className="flex gap-2">
                                         <button
