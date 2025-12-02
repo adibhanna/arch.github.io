@@ -1074,267 +1074,294 @@
 
             return (
                 <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-zinc-950' : 'bg-zinc-50'}`}>
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-                        {/* Header */}
-                        <div className={`rounded-2xl p-6 sm:p-8 mb-6 border transition-colors duration-300 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
-                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h1 className={`text-2xl sm:text-3xl font-semibold tracking-tight ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
-                                            System Architecture Framework
-                                        </h1>
-                                        <button
-                                            onClick={() => setDarkMode(!darkMode)}
-                                            className={`p-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-600'}`}
-                                            aria-label="Toggle dark mode"
-                                        >
-                                            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                                        </button>
-                                    </div>
-                                    <p className={`text-sm mb-4 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                                        A comprehensive checklist for designing robust, scalable systems. {totalQuestions} questions across {framework.length} phases.
-                                    </p>
-
-                                    <div>
-                                        <label className={`block text-xs font-medium mb-1.5 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Project Name</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Enter project name..."
-                                            value={projectName}
-                                            onChange={(e) => setProjectName(e.target.value)}
-                                            className={`w-full max-w-sm px-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
-                                        />
-                                    </div>
+                    <div className="flex">
+                        {/* Sidebar */}
+                        <div className={`hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 border-r transition-colors duration-300 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                            <div className="flex-1 flex flex-col overflow-y-auto p-5">
+                                {/* Header */}
+                                <div className="flex items-center justify-between mb-6">
+                                    <h1 className={`text-lg font-semibold tracking-tight ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
+                                        Architecture Framework
+                                    </h1>
+                                    <button
+                                        onClick={() => setDarkMode(!darkMode)}
+                                        className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-600'}`}
+                                        aria-label="Toggle dark mode"
+                                    >
+                                        {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+                                    </button>
                                 </div>
 
-                                <div className="flex flex-row lg:flex-col items-center gap-4">
-                                    <ProgressRing progress={calculateProgress()} darkMode={darkMode} />
-                                    <div className="flex flex-col gap-2">
-                                        <button
-                                            onClick={exportNotes}
-                                            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
-                                        >
-                                            <Download size={16} />
-                                            <span>Export</span>
-                                        </button>
-                                        {lastSaved && (
-                                            <div className={`flex items-center gap-1 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                                                <Save size={12} />
-                                                <span>Auto-saved</span>
-                                            </div>
-                                        )}
+                                {/* Progress */}
+                                <div className="flex justify-center mb-6">
+                                    <ProgressRing progress={calculateProgress()} darkMode={darkMode} size={100} />
+                                </div>
+
+                                {/* Project Name */}
+                                <div className="mb-5">
+                                    <label className={`block text-xs font-medium mb-1.5 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Project Name</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter project name..."
+                                        value={projectName}
+                                        onChange={(e) => setProjectName(e.target.value)}
+                                        className={`w-full px-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                                    />
+                                </div>
+
+                                {/* Stakeholders */}
+                                <div className="mb-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Users size={14} className={darkMode ? 'text-zinc-500' : 'text-zinc-400'} />
+                                        <span className={`text-xs font-medium ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Stakeholders</span>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Controls */}
-                        <div className={`flex items-center justify-between mb-4 px-1`}>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={expandAll}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-600'}`}
-                                >
-                                    <ChevronsDown size={14} />
-                                    <span>Expand all</span>
-                                </button>
-                                <button
-                                    onClick={collapseAll}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-600'}`}
-                                >
-                                    <ChevronsUp size={14} />
-                                    <span>Collapse all</span>
-                                </button>
-                            </div>
-                            <button
-                                onClick={resetProgress}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-500' : 'hover:bg-zinc-100 text-zinc-400'}`}
-                            >
-                                <RotateCcw size={14} />
-                                <span>Reset</span>
-                            </button>
-                        </div>
-
-                        {/* Stakeholders */}
-                        <div className={`rounded-2xl p-5 mb-4 border transition-colors duration-300 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
-                            <div className="flex items-center gap-2 mb-4">
-                                <Users size={18} className={darkMode ? 'text-zinc-500' : 'text-zinc-400'} />
-                                <h2 className={`text-sm font-semibold ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>Stakeholders</h2>
-                            </div>
-
-                            {stakeholders.length > 0 && (
-                                <div className="mb-4 space-y-2">
-                                    {stakeholders.map((s) => (
-                                        <div key={s.id} className={`flex items-center justify-between px-3 py-2 rounded-lg ${darkMode ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
-                                            <div className="flex-1 min-w-0">
-                                                <span className={`text-sm font-medium ${darkMode ? 'text-zinc-200' : 'text-zinc-800'}`}>{s.name}</span>
-                                                {s.role && (
-                                                    <span className={`ml-2 text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>({s.role})</span>
-                                                )}
-                                            </div>
-                                            <button
-                                                onClick={() => removeStakeholder(s.id)}
-                                                className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-zinc-700 text-zinc-500' : 'hover:bg-zinc-200 text-zinc-400'}`}
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Name"
-                                    value={newStakeholder.name}
-                                    onChange={(e) => setNewStakeholder(prev => ({ ...prev, name: e.target.value }))}
-                                    onKeyDown={(e) => e.key === 'Enter' && addStakeholder()}
-                                    className={`flex-1 px-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Role (optional)"
-                                    value={newStakeholder.role}
-                                    onChange={(e) => setNewStakeholder(prev => ({ ...prev, role: e.target.value }))}
-                                    onKeyDown={(e) => e.key === 'Enter' && addStakeholder()}
-                                    className={`flex-1 px-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
-                                />
-                                <button
-                                    onClick={addStakeholder}
-                                    className={`px-3 py-2 rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
-                                >
-                                    <Plus size={18} />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Phases */}
-                        <div className="space-y-4">
-                            {framework.map((phase) => {
-                                const phaseChecked = phase.sections.reduce((acc, section, sIndex) => {
-                                    return acc + section.questions.filter((_, qIndex) =>
-                                        checkedItems[`${phase.id}-${sIndex}-${qIndex}`]
-                                    ).length;
-                                }, 0);
-                                const phaseTotal = phase.sections.reduce((acc, section) => acc + section.questions.length, 0);
-
-                                return (
-                                    <div key={phase.id} className={`rounded-2xl border overflow-hidden transition-colors duration-300 hover-lift ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
-                                        {/* Phase Header */}
-                                        <div className={`px-6 py-5 border-b ${darkMode ? 'border-zinc-800' : 'border-zinc-100'}`}>
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="flex items-start gap-4">
-                                                    <span className={`text-3xl font-semibold tabular-nums ${darkMode ? 'text-zinc-700' : 'text-zinc-300'}`}>{phase.number}</span>
-                                                    <div className="flex-1">
-                                                        <h2 className={`text-lg font-semibold ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
-                                                            {phase.phase}
-                                                        </h2>
-                                                        <p className={`text-sm mt-1.5 leading-relaxed ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                                                            {phase.description}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className={`text-sm font-medium tabular-nums px-2.5 py-1 rounded-md ${darkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-600'}`}>
-                                                    {phaseChecked}/{phaseTotal}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Sections */}
-                                        <div className={`divide-y ${darkMode ? 'divide-zinc-800' : 'divide-zinc-100'}`}>
-                                            {phase.sections.map((section, sIndex) => {
-                                                const sectionKey = `${phase.id}-${sIndex}`;
-                                                const isExpanded = expandedSections[sectionKey];
-                                                const sectionChecked = section.questions.filter((_, qIndex) =>
-                                                    checkedItems[`${phase.id}-${sIndex}-${qIndex}`]
-                                                ).length;
-
-                                                return (
-                                                    <div key={sIndex}>
-                                                        <button
-                                                            onClick={() => toggleSection(phase.id, sIndex)}
-                                                            className={`w-full px-6 py-4 flex items-center justify-between transition-colors ${darkMode ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50'}`}
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                <ChevronDown
-                                                                    size={16}
-                                                                    className={`transition-transform duration-200 ${darkMode ? 'text-zinc-600' : 'text-zinc-400'} ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
-                                                                />
-                                                                <h3 className={`text-sm font-medium ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
-                                                                    {section.title}
-                                                                </h3>
-                                                            </div>
-                                                            <div className="flex items-center gap-3">
-                                                                <div className={`w-16 h-1 rounded-full overflow-hidden ${darkMode ? 'bg-zinc-800' : 'bg-zinc-200'}`}>
-                                                                    <div
-                                                                        className={`h-full rounded-full transition-all duration-500 ${darkMode ? 'bg-zinc-600' : 'bg-zinc-500'}`}
-                                                                        style={{ width: `${(sectionChecked / section.questions.length) * 100}%` }}
-                                                                    />
-                                                                </div>
-                                                                <span className={`text-xs font-medium tabular-nums ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                                                                    {sectionChecked}/{section.questions.length}
-                                                                </span>
-                                                            </div>
-                                                        </button>
-
-                                                        {isExpanded && (
-                                                            <div className="px-6 pb-5 section-expand">
-                                                                {section.description && (
-                                                                    <p className={`ml-7 mb-4 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                                                                        {section.description}
-                                                                    </p>
-                                                                )}
-                                                                <div className="space-y-3 ml-7">
-                                                                    {section.questions.map((question, qIndex) => {
-                                                                        const itemKey = `${phase.id}-${sIndex}-${qIndex}`;
-                                                                        const isChecked = checkedItems[itemKey];
-                                                                        const note = notes[itemKey] || '';
-
-                                                                        return (
-                                                                            <div key={qIndex} className={`p-3 rounded-lg transition-colors ${isChecked ? (darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50') : ''}`}>
-                                                                                <div className="flex items-start gap-3">
-                                                                                    <button
-                                                                                        onClick={() => toggleCheck(phase.id, sIndex, qIndex)}
-                                                                                        className="mt-0.5 flex-shrink-0 checkbox-custom"
-                                                                                    >
-                                                                                        {isChecked ? (
-                                                                                            <CheckCircle2 size={18} className={darkMode ? 'text-zinc-500' : 'text-zinc-600'} />
-                                                                                        ) : (
-                                                                                            <Circle size={18} className={darkMode ? 'text-zinc-700 hover:text-zinc-600' : 'text-zinc-300 hover:text-zinc-400'} />
-                                                                                        )}
-                                                                                    </button>
-                                                                                    <div className="flex-1 min-w-0">
-                                                                                        <span className={`text-sm leading-relaxed ${isChecked ? (darkMode ? 'text-zinc-600' : 'text-zinc-400') : (darkMode ? 'text-zinc-300' : 'text-zinc-700')}`}>
-                                                                                            {question}
-                                                                                        </span>
-                                                                                        <textarea
-                                                                                            placeholder="Add notes..."
-                                                                                            value={note}
-                                                                                            onChange={(e) => updateNote(phase.id, sIndex, qIndex, e.target.value)}
-                                                                                            className={`mt-2 w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-none transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
-                                                                                            rows="2"
-                                                                                        />
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                            </div>
+                                    {stakeholders.length > 0 && (
+                                        <div className="mb-3 space-y-1.5">
+                                            {stakeholders.map((s) => (
+                                                <div key={s.id} className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm ${darkMode ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
+                                                    <div className="flex-1 min-w-0 truncate">
+                                                        <span className={`font-medium ${darkMode ? 'text-zinc-200' : 'text-zinc-800'}`}>{s.name}</span>
+                                                        {s.role && (
+                                                            <span className={`ml-1.5 text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>· {s.role}</span>
                                                         )}
                                                     </div>
-                                                );
-                                            })}
+                                                    <button
+                                                        onClick={() => removeStakeholder(s.id)}
+                                                        className={`p-0.5 rounded transition-colors ${darkMode ? 'hover:bg-zinc-700 text-zinc-600' : 'hover:bg-zinc-200 text-zinc-400'}`}
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Name"
+                                            value={newStakeholder.name}
+                                            onChange={(e) => setNewStakeholder(prev => ({ ...prev, name: e.target.value }))}
+                                            onKeyDown={(e) => e.key === 'Enter' && addStakeholder()}
+                                            className={`w-full px-2.5 py-1.5 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                                        />
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Role (optional)"
+                                                value={newStakeholder.role}
+                                                onChange={(e) => setNewStakeholder(prev => ({ ...prev, role: e.target.value }))}
+                                                onKeyDown={(e) => e.key === 'Enter' && addStakeholder()}
+                                                className={`flex-1 px-2.5 py-1.5 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                                            />
+                                            <button
+                                                onClick={addStakeholder}
+                                                className={`px-2.5 py-1.5 rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
+                                            >
+                                                <Plus size={16} />
+                                            </button>
                                         </div>
                                     </div>
-                                );
-                            })}
+                                </div>
+
+                                {/* Spacer */}
+                                <div className="flex-1" />
+
+                                {/* Controls */}
+                                <div className="space-y-2">
+                                    <button
+                                        onClick={exportNotes}
+                                        className={`w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
+                                    >
+                                        <Download size={16} />
+                                        <span>Export Markdown</span>
+                                    </button>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={expandAll}
+                                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600'}`}
+                                        >
+                                            <ChevronsDown size={14} />
+                                            <span>Expand</span>
+                                        </button>
+                                        <button
+                                            onClick={collapseAll}
+                                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600'}`}
+                                        >
+                                            <ChevronsUp size={14} />
+                                            <span>Collapse</span>
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        onClick={resetProgress}
+                                        className={`w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-600' : 'hover:bg-zinc-100 text-zinc-400'}`}
+                                    >
+                                        <RotateCcw size={12} />
+                                        <span>Reset Progress</span>
+                                    </button>
+
+                                    {lastSaved && (
+                                        <div className={`flex items-center justify-center gap-1 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                                            <Save size={10} />
+                                            <span>Auto-saved</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
-                        <p className={`text-center text-xs mt-8 ${darkMode ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                            {totalQuestions} questions across {framework.length} phases · Progress auto-saved locally
-                        </p>
+                        {/* Main Content */}
+                        <div className="flex-1 lg:pl-72">
+                            {/* Mobile Header */}
+                            <div className={`lg:hidden sticky top-0 z-10 p-4 border-b transition-colors duration-300 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                                <div className="flex items-center justify-between">
+                                    <h1 className={`text-lg font-semibold ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
+                                        Architecture Framework
+                                    </h1>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-sm font-medium ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>{calculateProgress()}%</span>
+                                        <button
+                                            onClick={() => setDarkMode(!darkMode)}
+                                            className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-600'}`}
+                                        >
+                                            {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-4 sm:p-6 lg:p-8">
+                                {/* Phases */}
+                                <div className="space-y-4 max-w-4xl">
+                                    {framework.map((phase) => {
+                                        const phaseChecked = phase.sections.reduce((acc, section, sIndex) => {
+                                            return acc + section.questions.filter((_, qIndex) =>
+                                                checkedItems[`${phase.id}-${sIndex}-${qIndex}`]
+                                            ).length;
+                                        }, 0);
+                                        const phaseTotal = phase.sections.reduce((acc, section) => acc + section.questions.length, 0);
+
+                                        return (
+                                            <div key={phase.id} className={`rounded-2xl border overflow-hidden transition-colors duration-300 hover-lift ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                                                {/* Phase Header */}
+                                                <div className={`px-5 py-4 border-b ${darkMode ? 'border-zinc-800' : 'border-zinc-100'}`}>
+                                                    <div className="flex items-start justify-between gap-4">
+                                                        <div className="flex items-start gap-3">
+                                                            <span className={`text-2xl font-semibold tabular-nums ${darkMode ? 'text-zinc-700' : 'text-zinc-300'}`}>{phase.number}</span>
+                                                            <div className="flex-1">
+                                                                <h2 className={`text-base font-semibold ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
+                                                                    {phase.phase}
+                                                                </h2>
+                                                                <p className={`text-sm mt-1 leading-relaxed ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                                                                    {phase.description}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className={`text-sm font-medium tabular-nums px-2 py-0.5 rounded-md ${darkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-600'}`}>
+                                                            {phaseChecked}/{phaseTotal}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Sections */}
+                                                <div className={`divide-y ${darkMode ? 'divide-zinc-800' : 'divide-zinc-100'}`}>
+                                                    {phase.sections.map((section, sIndex) => {
+                                                        const sectionKey = `${phase.id}-${sIndex}`;
+                                                        const isExpanded = expandedSections[sectionKey];
+                                                        const sectionChecked = section.questions.filter((_, qIndex) =>
+                                                            checkedItems[`${phase.id}-${sIndex}-${qIndex}`]
+                                                        ).length;
+
+                                                        return (
+                                                            <div key={sIndex}>
+                                                                <button
+                                                                    onClick={() => toggleSection(phase.id, sIndex)}
+                                                                    className={`w-full px-5 py-3 flex items-center justify-between transition-colors ${darkMode ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50'}`}
+                                                                >
+                                                                    <div className="flex items-center gap-2.5">
+                                                                        <ChevronDown
+                                                                            size={14}
+                                                                            className={`transition-transform duration-200 ${darkMode ? 'text-zinc-600' : 'text-zinc-400'} ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
+                                                                        />
+                                                                        <h3 className={`text-sm font-medium ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                                                                            {section.title}
+                                                                        </h3>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2.5">
+                                                                        <div className={`w-12 h-1 rounded-full overflow-hidden ${darkMode ? 'bg-zinc-800' : 'bg-zinc-200'}`}>
+                                                                            <div
+                                                                                className={`h-full rounded-full transition-all duration-500 ${darkMode ? 'bg-zinc-600' : 'bg-zinc-500'}`}
+                                                                                style={{ width: `${(sectionChecked / section.questions.length) * 100}%` }}
+                                                                            />
+                                                                        </div>
+                                                                        <span className={`text-xs font-medium tabular-nums ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                                                                            {sectionChecked}/{section.questions.length}
+                                                                        </span>
+                                                                    </div>
+                                                                </button>
+
+                                                                {isExpanded && (
+                                                                    <div className="px-5 pb-4 section-expand">
+                                                                        {section.description && (
+                                                                            <p className={`ml-6 mb-3 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                                                                                {section.description}
+                                                                            </p>
+                                                                        )}
+                                                                        <div className="space-y-2 ml-6">
+                                                                            {section.questions.map((question, qIndex) => {
+                                                                                const itemKey = `${phase.id}-${sIndex}-${qIndex}`;
+                                                                                const isChecked = checkedItems[itemKey];
+                                                                                const note = notes[itemKey] || '';
+
+                                                                                return (
+                                                                                    <div key={qIndex} className={`p-3 rounded-lg transition-colors ${isChecked ? (darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50') : ''}`}>
+                                                                                        <div className="flex items-start gap-3">
+                                                                                            <button
+                                                                                                onClick={() => toggleCheck(phase.id, sIndex, qIndex)}
+                                                                                                className="mt-0.5 flex-shrink-0 checkbox-custom"
+                                                                                            >
+                                                                                                {isChecked ? (
+                                                                                                    <CheckCircle2 size={18} className={darkMode ? 'text-zinc-500' : 'text-zinc-600'} />
+                                                                                                ) : (
+                                                                                                    <Circle size={18} className={darkMode ? 'text-zinc-700 hover:text-zinc-600' : 'text-zinc-300 hover:text-zinc-400'} />
+                                                                                                )}
+                                                                                            </button>
+                                                                                            <div className="flex-1 min-w-0">
+                                                                                                <span className={`text-sm leading-relaxed ${isChecked ? (darkMode ? 'text-zinc-600' : 'text-zinc-400') : (darkMode ? 'text-zinc-300' : 'text-zinc-700')}`}>
+                                                                                                    {question}
+                                                                                                </span>
+                                                                                                <textarea
+                                                                                                    placeholder="Add notes..."
+                                                                                                    value={note}
+                                                                                                    onChange={(e) => updateNote(phase.id, sIndex, qIndex, e.target.value)}
+                                                                                                    className={`mt-2 w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-none transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
+                                                                                                    rows="2"
+                                                                                                />
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <p className={`text-center text-xs mt-8 ${darkMode ? 'text-zinc-700' : 'text-zinc-400'}`}>
+                                    {totalQuestions} questions across {framework.length} phases
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             );
