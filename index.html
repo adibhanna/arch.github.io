@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Architecture Framework</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Lucide icons as inline SVG
+        const CheckCircle2 = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+        );
+
+        const Circle = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+            </svg>
+        );
+
+        const ChevronDown = ({ size = 20 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        );
+
+        const ChevronRight = ({ size = 20 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="9 18 15 12 9 6"/>
+            </svg>
+        );
+
+        const Download = ({ size = 18 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+        );
+
+        const ArchitectureFramework = () => {
+            const [expandedSections, setExpandedSections] = useState({});
+            const [checkedItems, setCheckedItems] = useState({});
+            const [projectName, setProjectName] = useState('');
+            const [notes, setNotes] = useState({});
+
+            const framework = [
+                {
+                    id: 'discovery',
+                    phase: '1. Discovery & Problem Definition',
+                    color: 'bg-blue-500',
+                    sections: [
+                        {
+                            title: 'Problem Space',
+                            questions: [
+                                'What problem are we solving? (One sentence)',
+                                'What happens if we build nothing?',
+                                'Who are the primary users?',
+                                'What are their key pain points?',
+                                'What does success look like?',
+                                'What are the business goals/KPIs?'
+                            ]
+                        },
+                        {
+                            title: 'Scope & Constraints',
+                            questions: [
+                                'What\'s in scope for v1? What\'s explicitly out of scope?',
+                                'What\'s the timeline? Hard deadlines?',
+                                'What\'s the budget? (Infrastructure + team)',
+                                'What existing systems must we integrate with?',
+                                'Any regulatory/compliance requirements? (GDPR, HIPAA, etc.)',
+                                'Any technical constraints? (Must use X, cannot use Y)'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'requirements',
+                    phase: '2. Requirements Analysis',
+                    color: 'bg-purple-500',
+                    sections: [
+                        {
+                            title: 'Scale & Performance',
+                            questions: [
+                                'Expected users: Day 1? Year 1? Year 3?',
+                                'Requests per second: Average? Peak?',
+                                'Data volume: Initial? Growth rate?',
+                                'Latency requirements: P50? P95? P99?',
+                                'Geographic distribution: Single region? Multi-region?',
+                                'Traffic patterns: Steady? Bursty? Predictable spikes?'
+                            ]
+                        },
+                        {
+                            title: 'Availability & Reliability',
+                            questions: [
+                                'Required uptime: 99%? 99.9%? 99.99%?',
+                                'Acceptable downtime window?',
+                                'Recovery Time Objective (RTO)?',
+                                'Recovery Point Objective (RPO)?',
+                                'Can we have scheduled maintenance windows?',
+                                'What\'s the cost of downtime per hour?'
+                            ]
+                        },
+                        {
+                            title: 'Data Requirements',
+                            questions: [
+                                'Strong consistency needed? Or eventual consistency OK?',
+                                'Read-heavy or write-heavy workload?',
+                                'Data retention requirements?',
+                                'Backup frequency needed?',
+                                'Any data sovereignty requirements?',
+                                'PII or sensitive data involved?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'data-modeling',
+                    phase: '3. Data & Domain Modeling',
+                    color: 'bg-green-500',
+                    sections: [
+                        {
+                            title: 'Core Entities',
+                            questions: [
+                                'What are the main entities/concepts?',
+                                'What are the relationships between entities?',
+                                'Which entities are immutable? Which change frequently?',
+                                'What\'s the cardinality? (1:1, 1:many, many:many)',
+                                'What are the access patterns for each entity?',
+                                'What\'s the source of truth for each entity?'
+                            ]
+                        },
+                        {
+                            title: 'Domain Boundaries',
+                            questions: [
+                                'What are the logical domains/bounded contexts?',
+                                'Which domains are core vs supporting vs generic?',
+                                'Where do domain boundaries align with team boundaries?',
+                                'Which domains can evolve independently?',
+                                'What events happen across domain boundaries?',
+                                'Which domains have different consistency requirements?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'architecture',
+                    phase: '4. Architecture Design',
+                    color: 'bg-orange-500',
+                    sections: [
+                        {
+                            title: 'System Structure',
+                            questions: [
+                                'Monolith or distributed? Why?',
+                                'What are the major components/services?',
+                                'Which components are synchronous? Asynchronous?',
+                                'What\'s the API contract between components?',
+                                'What are the external dependencies?',
+                                'Single database or multiple? Why?'
+                            ]
+                        },
+                        {
+                            title: 'Technology Choices',
+                            questions: [
+                                'Database(s): Relational? NoSQL? Why?',
+                                'Caching layer needed? What caching strategy?',
+                                'Message queue/event bus needed? Which one?',
+                                'API style: REST? GraphQL? gRPC? Why?',
+                                'Frontend architecture: SPA? SSR? Why?',
+                                'Deployment: VMs? Containers? Serverless? Why?'
+                            ]
+                        },
+                        {
+                            title: 'Trade-offs & Decisions',
+                            questions: [
+                                'Consistency vs Availability: Which did we prioritize? Why?',
+                                'Simplicity vs Flexibility: Where did we compromise?',
+                                'Cost vs Performance: What\'s our optimization target?',
+                                'Time to market vs Perfect design: What\'s the balance?',
+                                'Build vs Buy: What are we building? What are we buying?',
+                                'What technical debt are we accepting? Is it documented?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'resilience',
+                    phase: '5. Resilience & Failure Planning',
+                    color: 'bg-red-500',
+                    sections: [
+                        {
+                            title: 'Failure Modes',
+                            questions: [
+                                'What are the single points of failure?',
+                                'What happens when each component fails?',
+                                'What are the cascading failure risks?',
+                                'Can we degrade gracefully? How?',
+                                'What\'s the blast radius of each failure?',
+                                'Which failures are acceptable? Which are catastrophic?'
+                            ]
+                        },
+                        {
+                            title: 'Recovery & Redundancy',
+                            questions: [
+                                'Backup strategy: What? How often? Tested when?',
+                                'Disaster recovery plan: Documented? Tested?',
+                                'Redundancy: Active-active? Active-passive?',
+                                'Circuit breakers: Where? What thresholds?',
+                                'Retry logic: Where? What backoff strategy?',
+                                'Rate limiting: Where? What limits?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'security',
+                    phase: '6. Security & Privacy',
+                    color: 'bg-yellow-500',
+                    sections: [
+                        {
+                            title: 'Security Posture',
+                            questions: [
+                                'Authentication: How? What provider?',
+                                'Authorization: RBAC? ABAC? Policy-based?',
+                                'Data encryption: At rest? In transit?',
+                                'Secret management: How? Where stored?',
+                                'API security: Rate limiting? API keys? OAuth?',
+                                'What\'s the attack surface? How do we minimize it?'
+                            ]
+                        },
+                        {
+                            title: 'Privacy & Compliance',
+                            questions: [
+                                'What PII do we collect? Why?',
+                                'Data retention policy: How long? Why?',
+                                'Right to deletion: How implemented?',
+                                'Data export: How do users get their data?',
+                                'Audit logging: What\'s logged? Who can access?',
+                                'Compliance requirements met? Documented?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'observability',
+                    phase: '7. Observability & Operations',
+                    color: 'bg-indigo-500',
+                    sections: [
+                        {
+                            title: 'Monitoring & Metrics',
+                            questions: [
+                                'Key metrics to track: What are the Golden Signals?',
+                                'Dashboards: What do we need to see?',
+                                'Alerting: What alerts? What thresholds? Who responds?',
+                                'SLIs defined? SLOs defined? Error budgets?',
+                                'Cost monitoring: How do we track costs?',
+                                'Business metrics: What do stakeholders need?'
+                            ]
+                        },
+                        {
+                            title: 'Logging & Debugging',
+                            questions: [
+                                'Logging strategy: Structured? Centralized?',
+                                'Log retention: How long? Why?',
+                                'Distributed tracing: Implemented? What tool?',
+                                'How do we debug production issues?',
+                                'What runbooks do we need?',
+                                'On-call rotation: Who? How trained?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'team',
+                    phase: '8. Team & Organization',
+                    color: 'bg-pink-500',
+                    sections: [
+                        {
+                            title: 'Team Capabilities',
+                            questions: [
+                                'Team size: Now? 6 months? 1 year?',
+                                'Team expertise: Strengths? Gaps?',
+                                'Learning curve: Can the team support this?',
+                                'Cognitive load: Is this too complex?',
+                                'Team autonomy: Can teams work independently?',
+                                'Conway\'s Law: Does architecture match team structure?'
+                            ]
+                        },
+                        {
+                            title: 'Operational Burden',
+                            questions: [
+                                'Who operates this in production?',
+                                'Deployment frequency: How often?',
+                                'Deployment complexity: How many steps? Automated?',
+                                'What\'s the testing strategy?',
+                                'Documentation: What\'s needed? Who maintains?',
+                                'Knowledge sharing: How? How do new members onboard?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'evolution',
+                    phase: '9. Evolution & Future-Proofing',
+                    color: 'bg-teal-500',
+                    sections: [
+                        {
+                            title: 'Change Management',
+                            questions: [
+                                'What will we learn post-launch that might change things?',
+                                'Which parts are hardest to change later?',
+                                'Which parts can stay flexible?',
+                                'Migration strategy: How do we evolve without downtime?',
+                                'Versioning strategy: APIs? Data schemas?',
+                                'Deprecation strategy: How do we sunset old versions?'
+                            ]
+                        },
+                        {
+                            title: 'Future Growth',
+                            questions: [
+                                'What\'s our scale plan? 10x? 100x?',
+                                'Which components will hit limits first?',
+                                'What optimizations are deferred for later?',
+                                'What new features are on the horizon?',
+                                'How does this enable future products/features?',
+                                'What would break if we doubled users tomorrow?'
+                            ]
+                        }
+                    ]
+                }
+            ];
+
+            const toggleSection = (phaseId, sectionIndex) => {
+                const key = `${phaseId}-${sectionIndex}`;
+                setExpandedSections(prev => ({
+                    ...prev,
+                    [key]: !prev[key]
+                }));
+            };
+
+            const toggleCheck = (phaseId, sectionIndex, questionIndex) => {
+                const key = `${phaseId}-${sectionIndex}-${questionIndex}`;
+                setCheckedItems(prev => ({
+                    ...prev,
+                    [key]: !prev[key]
+                }));
+            };
+
+            const updateNote = (phaseId, sectionIndex, questionIndex, value) => {
+                const key = `${phaseId}-${sectionIndex}-${questionIndex}`;
+                setNotes(prev => ({
+                    ...prev,
+                    [key]: value
+                }));
+            };
+
+            const calculateProgress = () => {
+                const totalQuestions = framework.reduce((acc, phase) =>
+                    acc + phase.sections.reduce((sAcc, section) => sAcc + section.questions.length, 0), 0
+                );
+                const checkedCount = Object.values(checkedItems).filter(Boolean).length;
+                return Math.round((checkedCount / totalQuestions) * 100);
+            };
+
+            const exportNotes = () => {
+                let markdown = `# Architecture Framework: ${projectName || 'Untitled Project'}\n\n`;
+                markdown += `**Progress**: ${calculateProgress()}%\n\n`;
+                markdown += `**Date**: ${new Date().toLocaleDateString()}\n\n`;
+                markdown += `---\n\n`;
+
+                framework.forEach(phase => {
+                    markdown += `## ${phase.phase}\n\n`;
+                    phase.sections.forEach((section, sIndex) => {
+                        markdown += `### ${section.title}\n\n`;
+                        section.questions.forEach((question, qIndex) => {
+                            const key = `${phase.id}-${sIndex}-${qIndex}`;
+                            const isChecked = checkedItems[key];
+                            const note = notes[key];
+                            markdown += `- [${isChecked ? 'x' : ' '}] ${question}\n`;
+                            if (note) {
+                                markdown += `  \n  **Notes**: ${note}\n`;
+                            }
+                            markdown += `\n`;
+                        });
+                        markdown += `\n`;
+                    });
+                });
+
+                const blob = new Blob([markdown], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `architecture-framework-${projectName.replace(/\s+/g, '-').toLowerCase() || 'project'}.md`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-8">
+                    <div className="max-w-5xl mx-auto">
+                        {/* Header */}
+                        <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-6">
+                            <div className="flex items-start justify-between gap-4 mb-4">
+                                <div className="flex-1">
+                                    <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">
+                                        System Architecture Framework
+                                    </h1>
+                                    <p className="text-slate-600">
+                                        A comprehensive checklist for architecting robust systems
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={exportNotes}
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                                >
+                                    <Download size={18} />
+                                    <span className="hidden sm:inline">Export</span>
+                                </button>
+                            </div>
+
+                            <input
+                                type="text"
+                                placeholder="Project name..."
+                                value={projectName}
+                                onChange={(e) => setProjectName(e.target.value)}
+                                className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
+                            />
+
+                            <div className="mt-4">
+                                <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
+                                    <span>Overall Progress</span>
+                                    <span className="font-semibold">{calculateProgress()}%</span>
+                                </div>
+                                <div className="w-full bg-slate-200 rounded-full h-3">
+                                    <div
+                                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500"
+                                        style={{ width: `${calculateProgress()}%` }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Phases */}
+                        {framework.map((phase) => (
+                            <div key={phase.id} className="mb-6">
+                                <div className={`${phase.color} text-white rounded-t-xl px-6 py-4`}>
+                                    <h2 className="text-xl sm:text-2xl font-bold">{phase.phase}</h2>
+                                </div>
+                                <div className="bg-white rounded-b-xl shadow-lg">
+                                    {phase.sections.map((section, sIndex) => {
+                                        const sectionKey = `${phase.id}-${sIndex}`;
+                                        const isExpanded = expandedSections[sectionKey];
+                                        const sectionChecked = section.questions.filter((_, qIndex) =>
+                                            checkedItems[`${phase.id}-${sIndex}-${qIndex}`]
+                                        ).length;
+
+                                        return (
+                                            <div key={sIndex} className="border-b last:border-b-0 border-slate-200">
+                                                <button
+                                                    onClick={() => toggleSection(phase.id, sIndex)}
+                                                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                                                        <h3 className="text-lg font-semibold text-slate-800">{section.title}</h3>
+                                                    </div>
+                                                    <span className="text-sm text-slate-500">
+                                                        {sectionChecked}/{section.questions.length}
+                                                    </span>
+                                                </button>
+
+                                                {isExpanded && (
+                                                    <div className="px-6 pb-4 space-y-3">
+                                                        {section.questions.map((question, qIndex) => {
+                                                            const itemKey = `${phase.id}-${sIndex}-${qIndex}`;
+                                                            const isChecked = checkedItems[itemKey];
+                                                            const note = notes[itemKey] || '';
+
+                                                            return (
+                                                                <div key={qIndex} className="border-l-2 border-slate-200 pl-4">
+                                                                    <div className="flex items-start gap-3 mb-2">
+                                                                        <button
+                                                                            onClick={() => toggleCheck(phase.id, sIndex, qIndex)}
+                                                                            className="mt-1 flex-shrink-0"
+                                                                        >
+                                                                            {isChecked ? (
+                                                                                <CheckCircle2 size={20} className="text-green-500" />
+                                                                            ) : (
+                                                                                <Circle size={20} className="text-slate-300" />
+                                                                            )}
+                                                                        </button>
+                                                                        <span className={`text-slate-700 ${isChecked ? 'line-through opacity-60' : ''}`}>
+                                                                            {question}
+                                                                        </span>
+                                                                    </div>
+                                                                    <textarea
+                                                                        placeholder="Notes & decisions..."
+                                                                        value={note}
+                                                                        onChange={(e) => updateNote(phase.id, sIndex, qIndex, e.target.value)}
+                                                                        className="w-full ml-8 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-blue-400 focus:outline-none resize-none"
+                                                                        rows="2"
+                                                                    />
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Footer */}
+                        <div className="bg-slate-800 text-white rounded-xl shadow-lg p-6 mt-8">
+                            <h3 className="text-xl font-bold mb-3">💡 How to Use This Framework</h3>
+                            <ul className="space-y-2 text-slate-200">
+                                <li>• Work through each phase sequentially for best results</li>
+                                <li>• Check off questions as you answer them</li>
+                                <li>• Document your decisions and reasoning in the notes</li>
+                                <li>• Export your progress as markdown for documentation</li>
+                                <li>• Revisit and update as your understanding evolves</li>
+                                <li>• Not every question applies to every project—adapt as needed</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<ArchitectureFramework />, document.getElementById('root'));
+    </script>
+</body>
+</html>
