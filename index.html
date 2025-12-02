@@ -8,6 +8,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -167,6 +168,42 @@
             </svg>
         );
 
+        const Github = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>
+            </svg>
+        );
+
+        const Link2 = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/>
+            </svg>
+        );
+
+        const Code = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+        );
+
+        const GitBranch = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>
+            </svg>
+        );
+
+        const FileText = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/>
+            </svg>
+        );
+
+        const ExternalLink = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/>
+            </svg>
+        );
+
         // Tooltip Component
         const Tooltip = ({ children, content, darkMode }) => {
             const [show, setShow] = useState(false);
@@ -189,6 +226,61 @@
                         </div>
                     )}
                 </div>
+            );
+        };
+
+        // Mermaid Diagram Component
+        const MermaidDiagram = ({ code, darkMode, id }) => {
+            const [svg, setSvg] = useState('');
+            const [error, setError] = useState(null);
+
+            useEffect(() => {
+                if (!code.trim()) {
+                    setSvg('');
+                    setError(null);
+                    return;
+                }
+
+                const renderDiagram = async () => {
+                    try {
+                        mermaid.initialize({
+                            startOnLoad: false,
+                            theme: darkMode ? 'dark' : 'default',
+                            securityLevel: 'loose'
+                        });
+                        const { svg } = await mermaid.render(`mermaid-${id}`, code);
+                        setSvg(svg);
+                        setError(null);
+                    } catch (e) {
+                        setError(e.message || 'Invalid diagram syntax');
+                        setSvg('');
+                    }
+                };
+
+                renderDiagram();
+            }, [code, darkMode, id]);
+
+            if (!code.trim()) {
+                return (
+                    <div className={`text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                        Enter mermaid diagram code above to see preview
+                    </div>
+                );
+            }
+
+            if (error) {
+                return (
+                    <div className={`text-xs p-2 rounded ${darkMode ? 'bg-red-900/20 text-red-400' : 'bg-red-50 text-red-600'}`}>
+                        {error}
+                    </div>
+                );
+            }
+
+            return (
+                <div
+                    className="mermaid-preview overflow-auto"
+                    dangerouslySetInnerHTML={{ __html: svg }}
+                />
             );
         };
 
@@ -239,8 +331,13 @@
             const [checkedItems, setCheckedItems] = useState({});
             const [projectName, setProjectName] = useState('');
             const [notes, setNotes] = useState({});
+            const [codeSnippets, setCodeSnippets] = useState({});
+            const [diagrams, setDiagrams] = useState({});
+            const [activeTabs, setActiveTabs] = useState({});
             const [stakeholders, setStakeholders] = useState([]);
             const [newStakeholder, setNewStakeholder] = useState({ name: '', role: '' });
+            const [references, setReferences] = useState([]);
+            const [newReference, setNewReference] = useState({ title: '', url: '' });
             const [lastSaved, setLastSaved] = useState(null);
             const [darkMode, setDarkMode] = useState(() => {
                 if (typeof window !== 'undefined') {
@@ -259,9 +356,12 @@
                         const data = JSON.parse(saved);
                         if (data.checkedItems) setCheckedItems(data.checkedItems);
                         if (data.notes) setNotes(data.notes);
+                        if (data.codeSnippets) setCodeSnippets(data.codeSnippets);
+                        if (data.diagrams) setDiagrams(data.diagrams);
                         if (data.projectName) setProjectName(data.projectName);
                         if (data.expandedSections) setExpandedSections(data.expandedSections);
                         if (data.stakeholders) setStakeholders(data.stakeholders);
+                        if (data.references) setReferences(data.references);
                         setLastSaved(new Date(data.savedAt));
                     }
                 } catch (e) {
@@ -276,9 +376,12 @@
                         const data = {
                             checkedItems,
                             notes,
+                            codeSnippets,
+                            diagrams,
                             projectName,
                             expandedSections,
                             stakeholders,
+                            references,
                             savedAt: new Date().toISOString()
                         };
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -288,7 +391,7 @@
                     }
                 }, 500);
                 return () => clearTimeout(timeoutId);
-            }, [checkedItems, notes, projectName, expandedSections, stakeholders]);
+            }, [checkedItems, notes, codeSnippets, diagrams, projectName, expandedSections, stakeholders, references]);
 
             useEffect(() => {
                 document.documentElement.classList.toggle('dark', darkMode);
@@ -1023,6 +1126,45 @@
                 }));
             };
 
+            const updateCodeSnippet = (phaseId, sectionIndex, questionIndex, value) => {
+                const key = `${phaseId}-${sectionIndex}-${questionIndex}`;
+                setCodeSnippets(prev => ({
+                    ...prev,
+                    [key]: value
+                }));
+            };
+
+            const updateDiagram = (phaseId, sectionIndex, questionIndex, value) => {
+                const key = `${phaseId}-${sectionIndex}-${questionIndex}`;
+                setDiagrams(prev => ({
+                    ...prev,
+                    [key]: value
+                }));
+            };
+
+            const setActiveTab = (phaseId, sectionIndex, questionIndex, tab) => {
+                const key = `${phaseId}-${sectionIndex}-${questionIndex}`;
+                setActiveTabs(prev => ({
+                    ...prev,
+                    [key]: tab
+                }));
+            };
+
+            const addReference = () => {
+                if (newReference.url.trim()) {
+                    setReferences(prev => [...prev, {
+                        ...newReference,
+                        id: Date.now(),
+                        title: newReference.title.trim() || newReference.url
+                    }]);
+                    setNewReference({ title: '', url: '' });
+                }
+            };
+
+            const removeReference = (id) => {
+                setReferences(prev => prev.filter(r => r.id !== id));
+            };
+
             const calculateProgress = () => {
                 const totalQuestions = framework.reduce((acc, phase) =>
                     acc + phase.sections.reduce((sAcc, section) => sAcc + section.questions.length, 0), 0
@@ -1035,9 +1177,13 @@
                 if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
                     setCheckedItems({});
                     setNotes({});
+                    setCodeSnippets({});
+                    setDiagrams({});
+                    setActiveTabs({});
                     setProjectName('');
                     setExpandedSections({});
                     setStakeholders([]);
+                    setReferences([]);
                     localStorage.removeItem(STORAGE_KEY);
                 }
             };
@@ -1067,6 +1213,14 @@
                     markdown += `\n`;
                 }
 
+                if (references.length > 0) {
+                    markdown += `## References\n\n`;
+                    references.forEach(r => {
+                        markdown += `- [${r.title}](${r.url})\n`;
+                    });
+                    markdown += `\n`;
+                }
+
                 markdown += `---\n\n`;
 
                 framework.forEach(phase => {
@@ -1081,10 +1235,18 @@
                             const key = `${phase.id}-${sIndex}-${qIndex}`;
                             const isChecked = checkedItems[key];
                             const note = notes[key];
+                            const code = codeSnippets[key];
+                            const diagram = diagrams[key];
                             const questionText = typeof questionItem === 'string' ? questionItem : questionItem.q;
                             markdown += `- [${isChecked ? 'x' : ' '}] ${questionText}\n`;
                             if (note) {
                                 markdown += `\n  **Answer**: ${note}\n\n`;
+                            }
+                            if (code) {
+                                markdown += `\n  **Code**:\n  \`\`\`\n${code.split('\n').map(l => '  ' + l).join('\n')}\n  \`\`\`\n\n`;
+                            }
+                            if (diagram) {
+                                markdown += `\n  **Diagram**:\n  \`\`\`mermaid\n${diagram.split('\n').map(l => '  ' + l).join('\n')}\n  \`\`\`\n\n`;
                             }
                         });
                         markdown += `\n`;
@@ -1202,6 +1364,64 @@
                                     </div>
                                 </div>
 
+                                {/* References */}
+                                <div className="mb-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Link2 size={14} className={darkMode ? 'text-zinc-500' : 'text-zinc-400'} />
+                                        <span className={`text-xs font-medium ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>References</span>
+                                    </div>
+
+                                    {references.length > 0 && (
+                                        <div className="mb-3 space-y-1.5">
+                                            {references.map((r) => (
+                                                <div key={r.id} className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm ${darkMode ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
+                                                    <a
+                                                        href={r.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className={`flex-1 min-w-0 truncate flex items-center gap-1.5 ${darkMode ? 'text-zinc-300 hover:text-zinc-100' : 'text-zinc-700 hover:text-zinc-900'}`}
+                                                    >
+                                                        <ExternalLink size={12} className="flex-shrink-0" />
+                                                        <span className="truncate">{r.title}</span>
+                                                    </a>
+                                                    <button
+                                                        onClick={() => removeReference(r.id)}
+                                                        className={`p-0.5 rounded transition-colors ml-2 ${darkMode ? 'hover:bg-zinc-700 text-zinc-600' : 'hover:bg-zinc-200 text-zinc-400'}`}
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Title (optional)"
+                                            value={newReference.title}
+                                            onChange={(e) => setNewReference(prev => ({ ...prev, title: e.target.value }))}
+                                            className={`w-full px-2.5 py-1.5 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                                        />
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="url"
+                                                placeholder="URL"
+                                                value={newReference.url}
+                                                onChange={(e) => setNewReference(prev => ({ ...prev, url: e.target.value }))}
+                                                onKeyDown={(e) => e.key === 'Enter' && addReference()}
+                                                className={`flex-1 px-2.5 py-1.5 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                                            />
+                                            <button
+                                                onClick={addReference}
+                                                className={`px-2.5 py-1.5 rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
+                                            >
+                                                <Plus size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Spacer */}
                                 <div className="flex-1" />
 
@@ -1246,6 +1466,16 @@
                                             <span>Auto-saved</span>
                                         </div>
                                     )}
+
+                                    <a
+                                        href="https://github.com/adibhanna/arch.github.io"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`flex items-center justify-center gap-1.5 text-xs mt-4 ${darkMode ? 'text-zinc-600 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-600'}`}
+                                    >
+                                        <Github size={14} />
+                                        <span>View on GitHub</span>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -1352,6 +1582,9 @@
                                                                                 const itemKey = `${phase.id}-${sIndex}-${qIndex}`;
                                                                                 const isChecked = checkedItems[itemKey];
                                                                                 const note = notes[itemKey] || '';
+                                                                                const code = codeSnippets[itemKey] || '';
+                                                                                const diagram = diagrams[itemKey] || '';
+                                                                                const activeTab = activeTabs[itemKey] || 'notes';
                                                                                 const questionText = typeof questionItem === 'string' ? questionItem : questionItem.q;
                                                                                 const questionTip = typeof questionItem === 'object' ? questionItem.tip : null;
 
@@ -1379,13 +1612,71 @@
                                                                                                         </Tooltip>
                                                                                                     )}
                                                                                                 </div>
-                                                                                                <textarea
-                                                                                                    placeholder="Add notes..."
-                                                                                                    value={note}
-                                                                                                    onChange={(e) => updateNote(phase.id, sIndex, qIndex, e.target.value)}
-                                                                                                    className={`mt-2 w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-none transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
-                                                                                                    rows="2"
-                                                                                                />
+
+                                                                                                {/* Tabs */}
+                                                                                                <div className="flex items-center gap-1 mt-2 mb-2">
+                                                                                                    <button
+                                                                                                        onClick={() => setActiveTab(phase.id, sIndex, qIndex, 'notes')}
+                                                                                                        className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${activeTab === 'notes' ? (darkMode ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-200 text-zinc-800') : (darkMode ? 'text-zinc-500 hover:text-zinc-400' : 'text-zinc-500 hover:text-zinc-600')}`}
+                                                                                                    >
+                                                                                                        <FileText size={12} />
+                                                                                                        <span>Notes</span>
+                                                                                                    </button>
+                                                                                                    <button
+                                                                                                        onClick={() => setActiveTab(phase.id, sIndex, qIndex, 'code')}
+                                                                                                        className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${activeTab === 'code' ? (darkMode ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-200 text-zinc-800') : (darkMode ? 'text-zinc-500 hover:text-zinc-400' : 'text-zinc-500 hover:text-zinc-600')}`}
+                                                                                                    >
+                                                                                                        <Code size={12} />
+                                                                                                        <span>Code</span>
+                                                                                                    </button>
+                                                                                                    <button
+                                                                                                        onClick={() => setActiveTab(phase.id, sIndex, qIndex, 'diagram')}
+                                                                                                        className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${activeTab === 'diagram' ? (darkMode ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-200 text-zinc-800') : (darkMode ? 'text-zinc-500 hover:text-zinc-400' : 'text-zinc-500 hover:text-zinc-600')}`}
+                                                                                                    >
+                                                                                                        <GitBranch size={12} />
+                                                                                                        <span>Diagram</span>
+                                                                                                    </button>
+                                                                                                </div>
+
+                                                                                                {/* Notes Tab */}
+                                                                                                {activeTab === 'notes' && (
+                                                                                                    <textarea
+                                                                                                        placeholder="Add notes..."
+                                                                                                        value={note}
+                                                                                                        onChange={(e) => updateNote(phase.id, sIndex, qIndex, e.target.value)}
+                                                                                                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-none transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
+                                                                                                        rows="2"
+                                                                                                    />
+                                                                                                )}
+
+                                                                                                {/* Code Tab */}
+                                                                                                {activeTab === 'code' && (
+                                                                                                    <textarea
+                                                                                                        placeholder="Add code snippet..."
+                                                                                                        value={code}
+                                                                                                        onChange={(e) => updateCodeSnippet(phase.id, sIndex, qIndex, e.target.value)}
+                                                                                                        className={`w-full px-3 py-2 text-sm font-mono border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-none transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
+                                                                                                        rows="4"
+                                                                                                    />
+                                                                                                )}
+
+                                                                                                {/* Diagram Tab */}
+                                                                                                {activeTab === 'diagram' && (
+                                                                                                    <div className="space-y-3">
+                                                                                                        <textarea
+                                                                                                            placeholder="Enter mermaid diagram code...&#10;&#10;Example:&#10;graph TD&#10;    A[Start] --> B[Process]&#10;    B --> C[End]"
+                                                                                                            value={diagram}
+                                                                                                            onChange={(e) => updateDiagram(phase.id, sIndex, qIndex, e.target.value)}
+                                                                                                            className={`w-full px-3 py-2 text-sm font-mono border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-none transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
+                                                                                                            rows="4"
+                                                                                                        />
+                                                                                                        {diagram && (
+                                                                                                            <div className={`p-3 border rounded-lg overflow-auto ${darkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-zinc-200'}`}>
+                                                                                                                <MermaidDiagram code={diagram} darkMode={darkMode} id={itemKey} />
+                                                                                                            </div>
+                                                                                                        )}
+                                                                                                    </div>
+                                                                                                )}
                                                                                             </div>
                                                                                         </div>
                                                                                     </div>
