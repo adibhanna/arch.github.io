@@ -695,27 +695,44 @@
             }
         });
 
+        const STORAGE_KEY = 'arch-framework-data';
+
         const ArchitectureFramework = () => {
+            // Load initial state from localStorage
+            const getInitialState = () => {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        return JSON.parse(saved);
+                    }
+                } catch (e) {
+                    console.error('Failed to load from localStorage:', e);
+                }
+                return null;
+            };
+
+            const initialState = getInitialState();
+
             // Project state
-            const [expandedSections, setExpandedSections] = useState({});
-            const [checkedItems, setCheckedItems] = useState({});
-            const [projectName, setProjectName] = useState('');
-            const [notes, setNotes] = useState({});
-            const [codeSnippets, setCodeSnippets] = useState({});
-            const [codeLanguages, setCodeLanguages] = useState({});
+            const [expandedSections, setExpandedSections] = useState(initialState?.expandedSections || {});
+            const [checkedItems, setCheckedItems] = useState(initialState?.checkedItems || {});
+            const [projectName, setProjectName] = useState(initialState?.projectName || '');
+            const [notes, setNotes] = useState(initialState?.notes || {});
+            const [codeSnippets, setCodeSnippets] = useState(initialState?.codeSnippets || {});
+            const [codeLanguages, setCodeLanguages] = useState(initialState?.codeLanguages || {});
             const [codePreviewModes, setCodePreviewModes] = useState({});
-            const [diagrams, setDiagrams] = useState({});
+            const [diagrams, setDiagrams] = useState(initialState?.diagrams || {});
             const [diagramViewModes, setDiagramViewModes] = useState({});
-            const [questionLinks, setQuestionLinks] = useState({});
+            const [questionLinks, setQuestionLinks] = useState(initialState?.questionLinks || {});
             const [activeTabs, setActiveTabs] = useState({});
             const [expandedItems, setExpandedItems] = useState({});
             const [fullscreenDiagram, setFullscreenDiagram] = useState(null);
             const [fullscreenCode, setFullscreenCode] = useState(null);
-            const [stakeholders, setStakeholders] = useState([]);
+            const [stakeholders, setStakeholders] = useState(initialState?.stakeholders || []);
             const [newStakeholder, setNewStakeholder] = useState({ name: '', role: '' });
-            const [references, setReferences] = useState([]);
+            const [references, setReferences] = useState(initialState?.references || []);
             const [newReference, setNewReference] = useState({ title: '', url: '' });
-            const [additionalNotes, setAdditionalNotes] = useState('');
+            const [additionalNotes, setAdditionalNotes] = useState(initialState?.additionalNotes || '');
             const [newQuestionLink, setNewQuestionLink] = useState({});
             const [editingLink, setEditingLink] = useState(null);
             const [darkMode, setDarkMode] = useState(() => {
@@ -726,6 +743,24 @@
                 }
                 return false;
             });
+
+            // Save state to localStorage whenever it changes
+            useEffect(() => {
+                const dataToSave = {
+                    projectName,
+                    checkedItems,
+                    notes,
+                    codeSnippets,
+                    codeLanguages,
+                    diagrams,
+                    questionLinks,
+                    stakeholders,
+                    references,
+                    additionalNotes,
+                    expandedSections
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+            }, [projectName, checkedItems, notes, codeSnippets, codeLanguages, diagrams, questionLinks, stakeholders, references, additionalNotes, expandedSections]);
 
             // Load project data into state (used by import)
             const loadProjectData = (data) => {
@@ -1670,6 +1705,7 @@
 
             const resetProgress = () => {
                 if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                    localStorage.removeItem(STORAGE_KEY);
                     setCheckedItems({});
                     setNotes({});
                     setCodeSnippets({});
@@ -1687,7 +1723,6 @@
                     setFullscreenCode(null);
                     setEditingLink(null);
                     setNewQuestionLink({});
-                    localStorage.removeItem(STORAGE_KEY);
                 }
             };
 
