@@ -68,13 +68,24 @@
         .light .hover-lift:hover {
             box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
         }
+
+        mark {
+            background-color: #fef08a;
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
+        .dark mark {
+            background-color: #854d0e;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
 
         // Icons
         const CheckCircle2 = ({ size = 20, className = "" }) => (
@@ -117,10 +128,36 @@
             </svg>
         );
 
-        const BookOpen = ({ size = 20, className = "" }) => (
+        const Search = ({ size = 20, className = "" }) => (
             <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.3-4.3"/>
+            </svg>
+        );
+
+        const ChevronsDown = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/>
+            </svg>
+        );
+
+        const ChevronsUp = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m17 18-5-5-5 5"/><path d="m17 11-5-5-5 5"/>
+            </svg>
+        );
+
+        const RotateCcw = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+            </svg>
+        );
+
+        const Save = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
             </svg>
         );
 
@@ -164,20 +201,74 @@
             );
         };
 
+        // Highlight search matches
+        const HighlightText = ({ text, search }) => {
+            if (!search.trim()) return text;
+            const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            const parts = text.split(regex);
+            return parts.map((part, i) =>
+                regex.test(part) ? <mark key={i}>{part}</mark> : part
+            );
+        };
+
+        const STORAGE_KEY = 'arch-framework-data';
+
         const ArchitectureFramework = () => {
             const [expandedSections, setExpandedSections] = useState({});
             const [checkedItems, setCheckedItems] = useState({});
             const [projectName, setProjectName] = useState('');
             const [notes, setNotes] = useState({});
+            const [searchQuery, setSearchQuery] = useState('');
+            const [lastSaved, setLastSaved] = useState(null);
             const [darkMode, setDarkMode] = useState(() => {
                 if (typeof window !== 'undefined') {
+                    const saved = localStorage.getItem('arch-framework-darkmode');
+                    if (saved !== null) return JSON.parse(saved);
                     return window.matchMedia('(prefers-color-scheme: dark)').matches;
                 }
                 return false;
             });
 
+            // Load from localStorage on mount
+            useEffect(() => {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        if (data.checkedItems) setCheckedItems(data.checkedItems);
+                        if (data.notes) setNotes(data.notes);
+                        if (data.projectName) setProjectName(data.projectName);
+                        if (data.expandedSections) setExpandedSections(data.expandedSections);
+                        setLastSaved(new Date(data.savedAt));
+                    }
+                } catch (e) {
+                    console.error('Failed to load saved data:', e);
+                }
+            }, []);
+
+            // Save to localStorage on changes
+            useEffect(() => {
+                const timeoutId = setTimeout(() => {
+                    try {
+                        const data = {
+                            checkedItems,
+                            notes,
+                            projectName,
+                            expandedSections,
+                            savedAt: new Date().toISOString()
+                        };
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                        setLastSaved(new Date());
+                    } catch (e) {
+                        console.error('Failed to save data:', e);
+                    }
+                }, 500);
+                return () => clearTimeout(timeoutId);
+            }, [checkedItems, notes, projectName, expandedSections]);
+
             useEffect(() => {
                 document.documentElement.classList.toggle('dark', darkMode);
+                localStorage.setItem('arch-framework-darkmode', JSON.stringify(darkMode));
             }, [darkMode]);
 
             const framework = [
@@ -193,10 +284,12 @@
                             questions: [
                                 'What problem are we solving? (One sentence)',
                                 'What happens if we build nothing?',
-                                'Who are the primary users?',
-                                'What are their key pain points?',
-                                'What does success look like?',
-                                'What are the business goals/KPIs?'
+                                'Who are the primary users? Secondary users?',
+                                'What are their key pain points and frustrations?',
+                                'What does success look like? How will we measure it?',
+                                'What are the business goals and KPIs?',
+                                'Who are the key stakeholders? What are their priorities?',
+                                'Are there competing solutions? What are their limitations?'
                             ]
                         },
                         {
@@ -204,11 +297,13 @@
                             description: 'Establish boundaries and identify limitations early.',
                             questions: [
                                 'What\'s in scope for v1? What\'s explicitly out of scope?',
-                                'What\'s the timeline? Hard deadlines?',
-                                'What\'s the budget? (Infrastructure + team)',
+                                'What\'s the timeline? Are there hard deadlines?',
+                                'What\'s the budget? (Infrastructure, team, tooling)',
                                 'What existing systems must we integrate with?',
-                                'Any regulatory/compliance requirements? (GDPR, HIPAA, etc.)',
-                                'Any technical constraints? (Must use X, cannot use Y)'
+                                'Any regulatory/compliance requirements? (GDPR, HIPAA, SOC2, PCI-DSS)',
+                                'Any technical constraints? (Must use X, cannot use Y)',
+                                'What are the non-negotiable requirements vs nice-to-haves?',
+                                'Are there organizational or political constraints to consider?'
                             ]
                         }
                     ]
@@ -223,36 +318,45 @@
                             title: 'Scale & Performance',
                             description: 'Understand traffic patterns and growth projections to size your system correctly.',
                             questions: [
-                                'Expected users: Day 1? Year 1? Year 3?',
-                                'Requests per second: Average? Peak?',
-                                'Data volume: Initial? Growth rate?',
-                                'Latency requirements: P50? P95? P99?',
-                                'Geographic distribution: Single region? Multi-region?',
-                                'Traffic patterns: Steady? Bursty? Predictable spikes?'
+                                'Expected users: Day 1? Month 1? Year 1? Year 3?',
+                                'Requests per second: Average? Peak? Burst capacity needed?',
+                                'Data volume: Initial size? Daily growth rate? Total after 1 year?',
+                                'Latency requirements: P50? P95? P99? Hard limits?',
+                                'Throughput requirements: Reads/sec? Writes/sec?',
+                                'Geographic distribution: Single region? Multi-region? Global?',
+                                'Traffic patterns: Steady? Bursty? Predictable spikes? Seasonal?',
+                                'What are the expected concurrent users at peak?',
+                                'Are there batch processing requirements? Volume? Frequency?'
                             ]
                         },
                         {
                             title: 'Availability & Reliability',
                             description: 'Define uptime targets and understand the cost of failures.',
                             questions: [
-                                'Required uptime: 99%? 99.9%? 99.99%?',
-                                'Acceptable downtime window?',
-                                'Recovery Time Objective (RTO)?',
-                                'Recovery Point Objective (RPO)?',
-                                'Can we have scheduled maintenance windows?',
-                                'What\'s the cost of downtime per hour?'
+                                'Required uptime: 99%? 99.9%? 99.99%? 99.999%?',
+                                'What\'s the acceptable downtime per month/year?',
+                                'Recovery Time Objective (RTO)? How fast must we recover?',
+                                'Recovery Point Objective (RPO)? How much data loss is acceptable?',
+                                'Can we have scheduled maintenance windows? When?',
+                                'What\'s the business cost of downtime per hour?',
+                                'What SLAs do we need to offer to customers?',
+                                'Are there external dependencies with their own SLAs?',
+                                'What\'s the acceptable error rate? (e.g., 0.1% of requests)'
                             ]
                         },
                         {
                             title: 'Data Requirements',
                             description: 'Clarify consistency needs, access patterns, and data lifecycle.',
                             questions: [
-                                'Strong consistency needed? Or eventual consistency OK?',
-                                'Read-heavy or write-heavy workload?',
-                                'Data retention requirements?',
-                                'Backup frequency needed?',
-                                'Any data sovereignty requirements?',
-                                'PII or sensitive data involved?'
+                                'Strong consistency needed? Or eventual consistency OK? Where?',
+                                'Read-heavy or write-heavy workload? Ratio?',
+                                'Data retention requirements? Legal minimums/maximums?',
+                                'Backup frequency needed? Full vs incremental?',
+                                'Any data sovereignty requirements? Data residency laws?',
+                                'PII or sensitive data involved? Classification levels?',
+                                'Real-time data needs vs batch processing acceptable?',
+                                'Data archival strategy? Hot/warm/cold storage tiers?',
+                                'Audit trail requirements? Immutability needs?'
                             ]
                         }
                     ]
@@ -267,12 +371,15 @@
                             title: 'Core Entities',
                             description: 'Identify the key concepts and how they relate to each other.',
                             questions: [
-                                'What are the main entities/concepts?',
+                                'What are the main entities/concepts in the domain?',
                                 'What are the relationships between entities?',
                                 'Which entities are immutable? Which change frequently?',
                                 'What\'s the cardinality? (1:1, 1:many, many:many)',
                                 'What are the access patterns for each entity?',
-                                'What\'s the source of truth for each entity?'
+                                'What\'s the source of truth for each entity?',
+                                'What are the key identifiers? Natural keys vs surrogate keys?',
+                                'What attributes are required vs optional?',
+                                'Are there temporal aspects? (Versioning, history, effective dates)'
                             ]
                         },
                         {
@@ -284,7 +391,71 @@
                                 'Where do domain boundaries align with team boundaries?',
                                 'Which domains can evolve independently?',
                                 'What events happen across domain boundaries?',
-                                'Which domains have different consistency requirements?'
+                                'Which domains have different consistency requirements?',
+                                'Where are the transaction boundaries?',
+                                'What data needs to be replicated across domains?'
+                            ]
+                        },
+                        {
+                            title: 'Data Storage Strategy',
+                            description: 'Choose the right storage solutions for your data patterns.',
+                            questions: [
+                                'What database type fits each data pattern? (Relational, Document, Key-Value, Graph, Time-series)',
+                                'What indexing strategy is needed? Primary, secondary, composite indexes?',
+                                'Partitioning/sharding strategy? By what key? How many partitions?',
+                                'Denormalization trade-offs? Where is it worth it?',
+                                'What are the query patterns? Simple lookups vs complex queries?',
+                                'Full-text search requirements? Which fields?',
+                                'Caching strategy at the data layer? Cache-aside, write-through, write-behind?',
+                                'Data migration strategy from existing systems?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'api-design',
+                    phase: 'API Design',
+                    number: '04',
+                    description: 'APIs are contracts. Design them carefully as they\'re hard to change once published. Consider consumers, versioning, and long-term evolution.',
+                    sections: [
+                        {
+                            title: 'API Strategy',
+                            description: 'Define your overall approach to API design.',
+                            questions: [
+                                'API style: REST? GraphQL? gRPC? Event-driven? Why?',
+                                'Who are the API consumers? Internal services? External partners? Public developers?',
+                                'Synchronous vs asynchronous communication? Where?',
+                                'Request/response format: JSON? Protocol Buffers? XML?',
+                                'API gateway needed? What functionality? (Auth, rate limiting, transformation)',
+                                'Service mesh requirements? (Istio, Linkerd, Consul)',
+                                'How will APIs be discovered? Service registry? API catalog?'
+                            ]
+                        },
+                        {
+                            title: 'API Contracts',
+                            description: 'Define clear contracts and standards.',
+                            questions: [
+                                'How will APIs be documented? OpenAPI/Swagger? GraphQL schema?',
+                                'Naming conventions: URL structure, field names, error codes?',
+                                'Pagination strategy: Cursor-based? Offset? Keyset?',
+                                'Filtering and sorting conventions?',
+                                'Error handling: Error format? HTTP status codes? Error codes?',
+                                'Idempotency requirements? Idempotency keys?',
+                                'Request validation: Where? How strict?',
+                                'Response envelope structure? Metadata? Links (HATEOAS)?'
+                            ]
+                        },
+                        {
+                            title: 'API Versioning & Evolution',
+                            description: 'Plan for change without breaking consumers.',
+                            questions: [
+                                'Versioning strategy: URL path? Header? Query param?',
+                                'Breaking vs non-breaking change policy?',
+                                'Deprecation process: Timeline? Communication? Sunset headers?',
+                                'Backward compatibility requirements: How many versions supported?',
+                                'How will you handle schema evolution?',
+                                'Contract testing between services?',
+                                'API changelog and migration guides?'
                             ]
                         }
                     ]
@@ -292,31 +463,49 @@
                 {
                     id: 'architecture',
                     phase: 'Architecture Design',
-                    number: '04',
+                    number: '05',
                     description: 'Make deliberate choices about system structure and technology. Document trade-offs explicitly—every decision has costs and benefits.',
                     sections: [
                         {
                             title: 'System Structure',
                             description: 'Define how components are organized and communicate.',
                             questions: [
-                                'Monolith or distributed? Why?',
+                                'Monolith, modular monolith, or microservices? Why?',
                                 'What are the major components/services?',
                                 'Which components are synchronous? Asynchronous?',
-                                'What\'s the API contract between components?',
                                 'What are the external dependencies?',
-                                'Single database or multiple? Why?'
+                                'Single database or database per service? Why?',
+                                'How do services communicate? HTTP? Message queues? Events?',
+                                'What\'s the deployment unit? (Container, function, VM)',
+                                'Serverless components? Where does it make sense?'
                             ]
                         },
                         {
                             title: 'Technology Choices',
                             description: 'Select tools and frameworks based on requirements, not trends.',
                             questions: [
-                                'Database(s): Relational? NoSQL? Why?',
-                                'Caching layer needed? What caching strategy?',
-                                'Message queue/event bus needed? Which one?',
-                                'API style: REST? GraphQL? gRPC? Why?',
-                                'Frontend architecture: SPA? SSR? Why?',
-                                'Deployment: VMs? Containers? Serverless? Why?'
+                                'Primary programming language(s)? Why?',
+                                'Framework choices? Why these over alternatives?',
+                                'Database(s): Which ones? Why? (PostgreSQL, MongoDB, Redis, etc.)',
+                                'Message queue/event bus: Which one? (Kafka, RabbitMQ, SQS, etc.)',
+                                'Search infrastructure: Elasticsearch? Algolia? Database full-text?',
+                                'File/blob storage: S3? GCS? Azure Blob?',
+                                'CDN requirements? Which provider?',
+                                'Infrastructure: AWS? GCP? Azure? On-prem? Multi-cloud?'
+                            ]
+                        },
+                        {
+                            title: 'Caching Strategy',
+                            description: 'Design caching layers to optimize performance and reduce load.',
+                            questions: [
+                                'What layers need caching? (Browser, CDN, Application, Database)',
+                                'Cache technology: Redis? Memcached? In-memory?',
+                                'Cache invalidation strategy: TTL? Event-based? Manual?',
+                                'Cache-aside, read-through, or write-through pattern?',
+                                'What\'s the cache hit ratio target?',
+                                'Cache warming strategy for cold starts?',
+                                'Distributed caching requirements? Consistency?',
+                                'Cache key design: Namespacing? Versioning?'
                             ]
                         },
                         {
@@ -328,7 +517,109 @@
                                 'Cost vs Performance: What\'s our optimization target?',
                                 'Time to market vs Perfect design: What\'s the balance?',
                                 'Build vs Buy: What are we building? What are we buying?',
-                                'What technical debt are we accepting? Is it documented?'
+                                'What technical debt are we intentionally accepting?',
+                                'What are the key architectural decision records (ADRs)?',
+                                'What would we do differently with more time/budget?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'testing',
+                    phase: 'Testing Strategy',
+                    number: '06',
+                    description: 'Define how you\'ll verify the system works correctly. A comprehensive testing strategy catches bugs early and enables confident deployments.',
+                    sections: [
+                        {
+                            title: 'Test Pyramid',
+                            description: 'Plan your testing layers and coverage targets.',
+                            questions: [
+                                'Unit test coverage target? What\'s worth unit testing?',
+                                'Integration test strategy: What integrations to test?',
+                                'End-to-end test coverage: Critical user journeys?',
+                                'Contract testing between services?',
+                                'What testing frameworks and tools?',
+                                'Test data management: Fixtures? Factories? Production snapshots?',
+                                'Mocking strategy: What to mock? What to test against real services?',
+                                'Code coverage requirements? Coverage tools?'
+                            ]
+                        },
+                        {
+                            title: 'Performance & Load Testing',
+                            description: 'Verify the system meets performance requirements.',
+                            questions: [
+                                'Load testing approach: Tools? (k6, Gatling, Locust, JMeter)',
+                                'Performance benchmarks: What latency targets?',
+                                'Stress testing: How far beyond normal load?',
+                                'Soak testing: Long-running stability tests?',
+                                'Capacity planning: How to determine scaling thresholds?',
+                                'Performance regression testing in CI/CD?',
+                                'Database query performance testing?',
+                                'Third-party dependency performance impact?'
+                            ]
+                        },
+                        {
+                            title: 'Specialized Testing',
+                            description: 'Additional testing for specific quality attributes.',
+                            questions: [
+                                'Security testing: SAST? DAST? Penetration testing schedule?',
+                                'Accessibility testing: WCAG compliance level? Tools?',
+                                'Chaos engineering: Failure injection testing? (Chaos Monkey, Gremlin)',
+                                'Data integrity testing: Consistency checks?',
+                                'Backup/restore testing: How often verified?',
+                                'Disaster recovery drills: Frequency? Scope?',
+                                'Browser/device compatibility testing matrix?',
+                                'API compatibility testing for breaking changes?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'cicd',
+                    phase: 'CI/CD & Deployment',
+                    number: '07',
+                    description: 'Automate your path to production. Good CI/CD practices enable fast, reliable, and safe deployments.',
+                    sections: [
+                        {
+                            title: 'Build & Integration',
+                            description: 'Define your continuous integration pipeline.',
+                            questions: [
+                                'CI platform: GitHub Actions? GitLab CI? Jenkins? CircleCI?',
+                                'Build pipeline stages: Lint, test, build, scan, publish?',
+                                'Build time target? Current build time?',
+                                'Artifact management: Container registry? Package registry?',
+                                'Dependency scanning: Vulnerabilities? License compliance?',
+                                'Code quality gates: Coverage? Complexity? Duplication?',
+                                'Branch strategy: GitFlow? Trunk-based? GitHub Flow?',
+                                'Merge requirements: Reviews? CI passing? Approvals?'
+                            ]
+                        },
+                        {
+                            title: 'Deployment Strategy',
+                            description: 'Define how changes reach production.',
+                            questions: [
+                                'Deployment frequency target: Daily? Weekly? Continuous?',
+                                'Deployment strategy: Rolling? Blue-green? Canary? Feature flags?',
+                                'Environment progression: Dev → Staging → Production?',
+                                'Infrastructure as Code: Terraform? CloudFormation? Pulumi?',
+                                'Container orchestration: Kubernetes? ECS? Nomad?',
+                                'Database migration strategy: How applied? Rollback plan?',
+                                'Configuration management: Environment variables? Secrets manager?',
+                                'Deployment approval process: Manual gates? Automated?'
+                            ]
+                        },
+                        {
+                            title: 'Release Management',
+                            description: 'Control and manage releases safely.',
+                            questions: [
+                                'Feature flags system: LaunchDarkly? Unleash? Custom?',
+                                'Rollback strategy: Automated? Manual? Time to rollback?',
+                                'Hotfix process: Emergency deployment path?',
+                                'Release notes: Automated generation? Changelog format?',
+                                'Deployment windows: Any restricted times?',
+                                'Smoke tests post-deployment: What\'s verified?',
+                                'Deployment metrics: Success rate? Frequency? Lead time?',
+                                'Progressive rollout: Percentage-based? User segment-based?'
                             ]
                         }
                     ]
@@ -336,7 +627,7 @@
                 {
                     id: 'resilience',
                     phase: 'Resilience & Failure Planning',
-                    number: '05',
+                    number: '08',
                     description: 'Plan for failure before it happens. Systems fail—the question is whether you\'ve designed for graceful degradation and quick recovery.',
                     sections: [
                         {
@@ -346,21 +637,39 @@
                                 'What are the single points of failure?',
                                 'What happens when each component fails?',
                                 'What are the cascading failure risks?',
-                                'Can we degrade gracefully? How?',
+                                'Can we degrade gracefully? How? Which features?',
                                 'What\'s the blast radius of each failure?',
-                                'Which failures are acceptable? Which are catastrophic?'
+                                'Which failures are acceptable? Which are catastrophic?',
+                                'Dependency failure impact: What if each dependency is down?',
+                                'Data corruption scenarios: Detection? Recovery?'
+                            ]
+                        },
+                        {
+                            title: 'Resilience Patterns',
+                            description: 'Implement patterns to handle failures gracefully.',
+                            questions: [
+                                'Circuit breakers: Where? What thresholds? Fallback behavior?',
+                                'Retry logic: Where? What backoff strategy? Max attempts?',
+                                'Timeouts: What values? Connection vs read timeouts?',
+                                'Bulkheads: Resource isolation between components?',
+                                'Rate limiting: Where? What limits? Per user? Per IP?',
+                                'Load shedding: Priority of requests when overloaded?',
+                                'Fallback strategies: Cached responses? Default values? Degraded mode?',
+                                'Health checks: Liveness? Readiness? Dependencies included?'
                             ]
                         },
                         {
                             title: 'Recovery & Redundancy',
                             description: 'Design mechanisms to recover quickly and prevent data loss.',
                             questions: [
-                                'Backup strategy: What? How often? Tested when?',
-                                'Disaster recovery plan: Documented? Tested?',
-                                'Redundancy: Active-active? Active-passive?',
-                                'Circuit breakers: Where? What thresholds?',
-                                'Retry logic: Where? What backoff strategy?',
-                                'Rate limiting: Where? What limits?'
+                                'Backup strategy: What? How often? Where stored? Tested when?',
+                                'Point-in-time recovery capability?',
+                                'Disaster recovery plan: Documented? Tested? RTO/RPO met?',
+                                'Redundancy: Active-active? Active-passive? Multi-region?',
+                                'Failover process: Automatic? Manual? DNS-based?',
+                                'Data replication: Sync? Async? Lag tolerance?',
+                                'Incident response process: Runbooks? On-call rotation?',
+                                'Post-incident review process: Blameless? Action items tracked?'
                             ]
                         }
                     ]
@@ -368,31 +677,63 @@
                 {
                     id: 'security',
                     phase: 'Security & Privacy',
-                    number: '06',
+                    number: '09',
                     description: 'Build security in from the start, not as an afterthought. Consider authentication, authorization, data protection, and compliance requirements.',
                     sections: [
                         {
-                            title: 'Security Posture',
-                            description: 'Define how you\'ll protect the system and its data.',
+                            title: 'Authentication & Authorization',
+                            description: 'Define how users and services prove identity and access resources.',
                             questions: [
-                                'Authentication: How? What provider?',
-                                'Authorization: RBAC? ABAC? Policy-based?',
-                                'Data encryption: At rest? In transit?',
-                                'Secret management: How? Where stored?',
-                                'API security: Rate limiting? API keys? OAuth?',
-                                'What\'s the attack surface? How do we minimize it?'
+                                'Authentication method: OAuth2? SAML? OIDC? API keys?',
+                                'Identity provider: Build vs buy? (Auth0, Okta, Cognito, Keycloak)',
+                                'Multi-factor authentication: Required? Which factors?',
+                                'Session management: Tokens? Cookies? Expiration policy?',
+                                'Authorization model: RBAC? ABAC? Policy-based?',
+                                'Permission granularity: Resource-level? Field-level?',
+                                'Service-to-service auth: mTLS? Service accounts? JWT?',
+                                'API authentication: API keys? OAuth tokens? Both?'
+                            ]
+                        },
+                        {
+                            title: 'Data Protection',
+                            description: 'Protect data at rest, in transit, and in use.',
+                            questions: [
+                                'Encryption at rest: What data? What algorithm? Key management?',
+                                'Encryption in transit: TLS version? Certificate management?',
+                                'Secret management: Where stored? (Vault, AWS Secrets Manager, etc.)',
+                                'Key rotation policy: Frequency? Automation?',
+                                'PII handling: Identification? Encryption? Tokenization? Masking?',
+                                'Data classification: Levels? Handling requirements per level?',
+                                'Database encryption: Column-level? Table-level? Disk-level?',
+                                'Backup encryption: Same keys? Different keys?'
+                            ]
+                        },
+                        {
+                            title: 'Security Practices',
+                            description: 'Establish security processes and controls.',
+                            questions: [
+                                'Security scanning: SAST tools? DAST tools? Container scanning?',
+                                'Dependency vulnerability scanning: Frequency? Remediation SLA?',
+                                'Penetration testing: Frequency? Scope? Internal or third-party?',
+                                'Security review process: When required? Who reviews?',
+                                'OWASP Top 10: How addressed? (Injection, XSS, CSRF, etc.)',
+                                'DDoS protection: CDN? WAF? Rate limiting?',
+                                'Audit logging: What\'s logged? Retention? Access controls?',
+                                'Incident response plan: Security-specific procedures?'
                             ]
                         },
                         {
                             title: 'Privacy & Compliance',
                             description: 'Ensure you handle user data responsibly and legally.',
                             questions: [
-                                'What PII do we collect? Why?',
-                                'Data retention policy: How long? Why?',
-                                'Right to deletion: How implemented?',
-                                'Data export: How do users get their data?',
-                                'Audit logging: What\'s logged? Who can access?',
-                                'Compliance requirements met? Documented?'
+                                'What PII do we collect? Why? Minimization applied?',
+                                'Data retention policy: How long? Automated deletion?',
+                                'Right to deletion (RTBF): How implemented? Timeline?',
+                                'Data portability: Export format? Delivery method?',
+                                'Consent management: How captured? How honored?',
+                                'Privacy by design: Data flow mapping? Impact assessments?',
+                                'Compliance requirements: GDPR? CCPA? HIPAA? SOC2? PCI-DSS?',
+                                'Third-party data sharing: DPAs in place? Purpose limitations?'
                             ]
                         }
                     ]
@@ -400,31 +741,113 @@
                 {
                     id: 'observability',
                     phase: 'Observability & Operations',
-                    number: '07',
+                    number: '10',
                     description: 'You can\'t fix what you can\'t see. Plan how you\'ll monitor, debug, and operate the system in production from day one.',
                     sections: [
                         {
                             title: 'Monitoring & Metrics',
                             description: 'Define what to measure and how to know when things go wrong.',
                             questions: [
-                                'Key metrics to track: What are the Golden Signals?',
-                                'Dashboards: What do we need to see?',
-                                'Alerting: What alerts? What thresholds? Who responds?',
-                                'SLIs defined? SLOs defined? Error budgets?',
-                                'Cost monitoring: How do we track costs?',
-                                'Business metrics: What do stakeholders need?'
+                                'Key metrics: What are the Golden Signals? (Latency, traffic, errors, saturation)',
+                                'Business metrics: What do stakeholders need to see?',
+                                'Infrastructure metrics: CPU, memory, disk, network?',
+                                'Application metrics: Request rates, response times, queue depths?',
+                                'Custom metrics: What domain-specific metrics?',
+                                'Metrics platform: Prometheus? Datadog? CloudWatch? New Relic?',
+                                'Dashboards: What views? Who\'s the audience?',
+                                'SLIs/SLOs/SLAs defined? Error budgets calculated?'
                             ]
                         },
                         {
-                            title: 'Logging & Debugging',
-                            description: 'Plan how you\'ll investigate and resolve production issues.',
+                            title: 'Alerting',
+                            description: 'Define when and how to notify the team of issues.',
                             questions: [
-                                'Logging strategy: Structured? Centralized?',
-                                'Log retention: How long? Why?',
-                                'Distributed tracing: Implemented? What tool?',
-                                'How do we debug production issues?',
-                                'What runbooks do we need?',
-                                'On-call rotation: Who? How trained?'
+                                'Alerting thresholds: What triggers alerts? Avoid alert fatigue?',
+                                'Severity levels: P1/P2/P3? Response time expectations?',
+                                'Notification channels: PagerDuty? Slack? Email? Phone?',
+                                'Escalation policy: Who\'s paged? When to escalate?',
+                                'On-call rotation: Schedule? Compensation? Handoff process?',
+                                'Alert runbooks: Documented response procedures?',
+                                'Alert aggregation: Grouping related alerts?',
+                                'Maintenance windows: Silencing alerts during deployments?'
+                            ]
+                        },
+                        {
+                            title: 'Logging & Tracing',
+                            description: 'Enable debugging and understanding of system behavior.',
+                            questions: [
+                                'Logging format: Structured (JSON)? Log levels?',
+                                'Log aggregation: ELK? Splunk? CloudWatch Logs? Loki?',
+                                'Log retention: How long? Tiered storage?',
+                                'Distributed tracing: OpenTelemetry? Jaeger? Zipkin? X-Ray?',
+                                'Trace sampling strategy: Head-based? Tail-based? Rate?',
+                                'Correlation IDs: How propagated across services?',
+                                'What to log: Requests? Errors? Debug info? PII concerns?',
+                                'Log-based alerting: Error rate spikes? Specific patterns?'
+                            ]
+                        },
+                        {
+                            title: 'Debugging & Profiling',
+                            description: 'Tools and processes for investigating issues.',
+                            questions: [
+                                'APM tool: Datadog? New Relic? Dynatrace?',
+                                'Profiling: CPU? Memory? When enabled?',
+                                'Error tracking: Sentry? Rollbar? Bugsnag?',
+                                'How to debug production issues safely?',
+                                'Feature flags for debug modes?',
+                                'Access to production logs: Who? How? Audit trail?',
+                                'Reproduction environments: Can we replicate prod issues?',
+                                'Post-mortem process: Template? Frequency? Tracking?'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'cost',
+                    phase: 'Cost & Resource Planning',
+                    number: '11',
+                    description: 'Understand and optimize the cost of running your system. Cloud costs can grow quickly without proper planning and monitoring.',
+                    sections: [
+                        {
+                            title: 'Cost Estimation',
+                            description: 'Estimate infrastructure and operational costs.',
+                            questions: [
+                                'Compute costs: Instance types? Sizing? Reserved vs on-demand?',
+                                'Storage costs: Data volume? Storage tiers? Growth rate?',
+                                'Network costs: Data transfer? Cross-region? CDN?',
+                                'Database costs: Instance size? Storage? IOPS? Replicas?',
+                                'Third-party service costs: APIs? SaaS tools? Licenses?',
+                                'Total monthly cost estimate? Annual projection?',
+                                'Cost per user/request/transaction?',
+                                'Budget limits and alerts?'
+                            ]
+                        },
+                        {
+                            title: 'Cost Optimization',
+                            description: 'Strategies to reduce and control costs.',
+                            questions: [
+                                'Reserved instances/savings plans: Commitment level?',
+                                'Spot/preemptible instances: Where applicable?',
+                                'Auto-scaling policies: Scale-down aggressive enough?',
+                                'Right-sizing: Regular review of resource utilization?',
+                                'Storage lifecycle policies: Auto-archive? Auto-delete?',
+                                'Caching ROI: Cost savings from caching layer?',
+                                'Multi-tenancy efficiency: Resource sharing between tenants?',
+                                'Development/staging cost controls: Shutdown schedules?'
+                            ]
+                        },
+                        {
+                            title: 'Cost Monitoring',
+                            description: 'Track and manage costs over time.',
+                            questions: [
+                                'Cost allocation tags: By team? By feature? By environment?',
+                                'Cost anomaly detection: Alerts for unexpected spikes?',
+                                'Showback/chargeback model: How costs attributed to teams?',
+                                'Regular cost review: Frequency? Who\'s involved?',
+                                'FinOps practices: Dedicated role? Tools?',
+                                'Cost forecasting: Based on growth projections?',
+                                'Optimization opportunities tracking?',
+                                'Vendor contract reviews: Annual? Negotiation strategy?'
                             ]
                         }
                     ]
@@ -432,31 +855,49 @@
                 {
                     id: 'team',
                     phase: 'Team & Organization',
-                    number: '08',
+                    number: '12',
                     description: 'Architecture must match team capabilities and structure. The best technical design fails if the team can\'t build or maintain it.',
                     sections: [
                         {
                             title: 'Team Capabilities',
                             description: 'Assess whether your team can build and maintain this system.',
                             questions: [
-                                'Team size: Now? 6 months? 1 year?',
-                                'Team expertise: Strengths? Gaps?',
-                                'Learning curve: Can the team support this?',
-                                'Cognitive load: Is this too complex?',
-                                'Team autonomy: Can teams work independently?',
-                                'Conway\'s Law: Does architecture match team structure?'
+                                'Team size: Current? 6 months? 1 year?',
+                                'Team expertise: Strengths? Gaps? Training needed?',
+                                'Learning curve: Can the team realistically support this?',
+                                'Cognitive load: Is this architecture too complex?',
+                                'Hiring plan: What roles needed? Timeline?',
+                                'Contractor/consultant needs: What expertise to bring in?',
+                                'Knowledge concentration risk: Bus factor?',
+                                'Cross-training plan: Reducing single points of knowledge?'
+                            ]
+                        },
+                        {
+                            title: 'Team Structure',
+                            description: 'Align architecture with organizational structure.',
+                            questions: [
+                                'Conway\'s Law: Does architecture match team structure?',
+                                'Team autonomy: Can teams deploy independently?',
+                                'Service ownership: Clear owners for each component?',
+                                'On-call responsibility: Who owns production issues?',
+                                'Communication patterns: Sync? Async? Meeting cadence?',
+                                'Decision-making process: RFCs? ADRs? Architecture review?',
+                                'Cross-team dependencies: How managed?',
+                                'Platform team: Dedicated infrastructure/platform support?'
                             ]
                         },
                         {
                             title: 'Operational Burden',
                             description: 'Consider the ongoing cost of running and evolving the system.',
                             questions: [
-                                'Who operates this in production?',
-                                'Deployment frequency: How often?',
-                                'Deployment complexity: How many steps? Automated?',
-                                'What\'s the testing strategy?',
-                                'Documentation: What\'s needed? Who maintains?',
-                                'Knowledge sharing: How? How do new members onboard?'
+                                'Deployment frequency: Current? Target?',
+                                'Deployment complexity: Steps? Automation level?',
+                                'Incident frequency: Current? Target?',
+                                'MTTR (Mean Time to Recovery): Current? Target?',
+                                'Technical debt management: How tracked? When addressed?',
+                                'Toil reduction: Automation opportunities?',
+                                'Documentation maintenance: Who? How kept current?',
+                                'Onboarding time: How long for new team members?'
                             ]
                         }
                     ]
@@ -464,7 +905,7 @@
                 {
                     id: 'evolution',
                     phase: 'Evolution & Future-Proofing',
-                    number: '09',
+                    number: '13',
                     description: 'Systems evolve. Design for change by identifying what\'s likely to change, what\'s hard to change, and how you\'ll migrate without disruption.',
                     sections: [
                         {
@@ -473,27 +914,56 @@
                             questions: [
                                 'What will we learn post-launch that might change things?',
                                 'Which parts are hardest to change later?',
-                                'Which parts can stay flexible?',
+                                'Which parts should stay flexible?',
                                 'Migration strategy: How do we evolve without downtime?',
-                                'Versioning strategy: APIs? Data schemas?',
-                                'Deprecation strategy: How do we sunset old versions?'
+                                'Versioning strategy: APIs? Data schemas? Configurations?',
+                                'Deprecation strategy: How do we sunset old versions?',
+                                'Feature flags: Gradual rollout? A/B testing infrastructure?',
+                                'Database schema evolution: Online migrations? Expand/contract?'
                             ]
                         },
                         {
-                            title: 'Future Growth',
-                            description: 'Anticipate scaling challenges and future requirements.',
+                            title: 'Scalability Planning',
+                            description: 'Anticipate and plan for growth.',
                             questions: [
                                 'What\'s our scale plan? 10x? 100x?',
                                 'Which components will hit limits first?',
-                                'What optimizations are deferred for later?',
-                                'What new features are on the horizon?',
-                                'How does this enable future products/features?',
-                                'What would break if we doubled users tomorrow?'
+                                'Horizontal vs vertical scaling: Where each applies?',
+                                'Database scaling path: Read replicas? Sharding? NewSQL?',
+                                'Caching scaling: Cluster? Sharding?',
+                                'What architectural changes needed at each scale milestone?',
+                                'Multi-region expansion plan?',
+                                'What would break if we 10x users tomorrow?'
+                            ]
+                        },
+                        {
+                            title: 'Future Considerations',
+                            description: 'Think ahead to future needs and opportunities.',
+                            questions: [
+                                'What new features are on the roadmap?',
+                                'How does this architecture enable/constrain future products?',
+                                'Technology refresh: When will current choices become obsolete?',
+                                'Vendor lock-in assessment: What\'s the exit cost?',
+                                'Open source vs proprietary: Long-term implications?',
+                                'AI/ML integration: Future data and compute needs?',
+                                'Regulatory changes: Anticipated compliance requirements?',
+                                'Acquisition/integration: How hard to integrate/be integrated?'
                             ]
                         }
                     ]
                 }
             ];
+
+            // Calculate all section keys for expand/collapse all
+            const allSectionKeys = useMemo(() => {
+                const keys = [];
+                framework.forEach(phase => {
+                    phase.sections.forEach((_, sIndex) => {
+                        keys.push(`${phase.id}-${sIndex}`);
+                    });
+                });
+                return keys;
+            }, []);
 
             const toggleSection = (phaseId, sectionIndex) => {
                 const key = `${phaseId}-${sectionIndex}`;
@@ -501,6 +971,16 @@
                     ...prev,
                     [key]: !prev[key]
                 }));
+            };
+
+            const expandAll = () => {
+                const expanded = {};
+                allSectionKeys.forEach(key => expanded[key] = true);
+                setExpandedSections(expanded);
+            };
+
+            const collapseAll = () => {
+                setExpandedSections({});
             };
 
             const toggleCheck = (phaseId, sectionIndex, questionIndex) => {
@@ -527,6 +1007,16 @@
                 return Math.round((checkedCount / totalQuestions) * 100);
             };
 
+            const resetProgress = () => {
+                if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                    setCheckedItems({});
+                    setNotes({});
+                    setProjectName('');
+                    setExpandedSections({});
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            };
+
             const exportNotes = () => {
                 let markdown = `# Architecture Framework: ${projectName || 'Untitled Project'}\n\n`;
                 markdown += `**Progress**: ${calculateProgress()}%\n\n`;
@@ -535,17 +1025,20 @@
 
                 framework.forEach(phase => {
                     markdown += `## ${phase.number}. ${phase.phase}\n\n`;
+                    markdown += `> ${phase.description}\n\n`;
                     phase.sections.forEach((section, sIndex) => {
                         markdown += `### ${section.title}\n\n`;
+                        if (section.description) {
+                            markdown += `*${section.description}*\n\n`;
+                        }
                         section.questions.forEach((question, qIndex) => {
                             const key = `${phase.id}-${sIndex}-${qIndex}`;
                             const isChecked = checkedItems[key];
                             const note = notes[key];
                             markdown += `- [${isChecked ? 'x' : ' '}] ${question}\n`;
                             if (note) {
-                                markdown += `  \n  **Notes**: ${note}\n`;
+                                markdown += `\n  **Answer**: ${note}\n\n`;
                             }
-                            markdown += `\n`;
                         });
                         markdown += `\n`;
                     });
@@ -560,14 +1053,43 @@
                 URL.revokeObjectURL(url);
             };
 
+            // Filter framework based on search
+            const filteredFramework = useMemo(() => {
+                if (!searchQuery.trim()) return framework;
+
+                const query = searchQuery.toLowerCase();
+                return framework.map(phase => {
+                    const filteredSections = phase.sections.map(section => {
+                        const filteredQuestions = section.questions.filter(q =>
+                            q.toLowerCase().includes(query)
+                        );
+                        return { ...section, questions: filteredQuestions };
+                    }).filter(section =>
+                        section.questions.length > 0 ||
+                        section.title.toLowerCase().includes(query) ||
+                        section.description?.toLowerCase().includes(query)
+                    );
+
+                    return { ...phase, sections: filteredSections };
+                }).filter(phase =>
+                    phase.sections.length > 0 ||
+                    phase.phase.toLowerCase().includes(query) ||
+                    phase.description.toLowerCase().includes(query)
+                );
+            }, [searchQuery]);
+
+            const totalQuestions = framework.reduce((acc, phase) =>
+                acc + phase.sections.reduce((sAcc, section) => sAcc + section.questions.length, 0), 0
+            );
+
             return (
                 <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-zinc-950' : 'bg-zinc-50'}`}>
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
                         {/* Header */}
-                        <div className={`rounded-2xl p-6 sm:p-8 mb-8 border transition-colors duration-300 hover-lift ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                        <div className={`rounded-2xl p-6 sm:p-8 mb-6 border transition-colors duration-300 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
                             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                                 <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center justify-between mb-4">
                                         <h1 className={`text-2xl sm:text-3xl font-semibold tracking-tight ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
                                             System Architecture Framework
                                         </h1>
@@ -579,11 +1101,11 @@
                                             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
                                         </button>
                                     </div>
-                                    <p className={`text-sm mb-6 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                                        A comprehensive checklist for designing robust, scalable systems. Work through each phase to ensure you've considered all aspects of your architecture.
+                                    <p className={`text-sm mb-4 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                                        A comprehensive checklist for designing robust, scalable systems. {totalQuestions} questions across {framework.length} phases.
                                     </p>
 
-                                    <div>
+                                    <div className="mb-4">
                                         <label className={`block text-xs font-medium mb-1.5 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Project Name</label>
                                         <input
                                             type="text"
@@ -593,24 +1115,80 @@
                                             className={`w-full max-w-sm px-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
                                         />
                                     </div>
+
+                                    {/* Search */}
+                                    <div className="relative">
+                                        <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search questions..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className={`w-full max-w-sm pl-9 pr-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="flex flex-row lg:flex-col items-center gap-4">
                                     <ProgressRing progress={calculateProgress()} darkMode={darkMode} />
-                                    <button
-                                        onClick={exportNotes}
-                                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
-                                    >
-                                        <Download size={16} />
-                                        <span>Export</span>
-                                    </button>
+                                    <div className="flex flex-col gap-2">
+                                        <button
+                                            onClick={exportNotes}
+                                            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
+                                        >
+                                            <Download size={16} />
+                                            <span>Export</span>
+                                        </button>
+                                        {lastSaved && (
+                                            <div className={`flex items-center gap-1 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                                                <Save size={12} />
+                                                <span>Auto-saved</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+                        {/* Controls */}
+                        <div className={`flex items-center justify-between mb-4 px-1`}>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={expandAll}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-600'}`}
+                                >
+                                    <ChevronsDown size={14} />
+                                    <span>Expand all</span>
+                                </button>
+                                <button
+                                    onClick={collapseAll}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-600'}`}
+                                >
+                                    <ChevronsUp size={14} />
+                                    <span>Collapse all</span>
+                                </button>
+                            </div>
+                            <button
+                                onClick={resetProgress}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${darkMode ? 'hover:bg-zinc-800 text-zinc-500' : 'hover:bg-zinc-100 text-zinc-400'}`}
+                            >
+                                <RotateCcw size={14} />
+                                <span>Reset</span>
+                            </button>
+                        </div>
+
+                        {/* Search results info */}
+                        {searchQuery && (
+                            <div className={`mb-4 px-1 text-sm ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                                {filteredFramework.reduce((acc, phase) =>
+                                    acc + phase.sections.reduce((sAcc, section) => sAcc + section.questions.length, 0), 0
+                                )} questions match "{searchQuery}"
+                            </div>
+                        )}
+
                         {/* Phases */}
                         <div className="space-y-4">
-                            {framework.map((phase) => {
+                            {filteredFramework.map((phase) => {
                                 const phaseChecked = phase.sections.reduce((acc, section, sIndex) => {
                                     return acc + section.questions.filter((_, qIndex) =>
                                         checkedItems[`${phase.id}-${sIndex}-${qIndex}`]
@@ -626,8 +1204,12 @@
                                                 <div className="flex items-start gap-4">
                                                     <span className={`text-3xl font-semibold tabular-nums ${darkMode ? 'text-zinc-700' : 'text-zinc-300'}`}>{phase.number}</span>
                                                     <div className="flex-1">
-                                                        <h2 className={`text-lg font-semibold ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>{phase.phase}</h2>
-                                                        <p className={`text-sm mt-1.5 leading-relaxed ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>{phase.description}</p>
+                                                        <h2 className={`text-lg font-semibold ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
+                                                            <HighlightText text={phase.phase} search={searchQuery} />
+                                                        </h2>
+                                                        <p className={`text-sm mt-1.5 leading-relaxed ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                                                            <HighlightText text={phase.description} search={searchQuery} />
+                                                        </p>
                                                     </div>
                                                 </div>
                                                 <div className={`text-sm font-medium tabular-nums px-2.5 py-1 rounded-md ${darkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-600'}`}>
@@ -640,7 +1222,7 @@
                                         <div className={`divide-y ${darkMode ? 'divide-zinc-800' : 'divide-zinc-100'}`}>
                                             {phase.sections.map((section, sIndex) => {
                                                 const sectionKey = `${phase.id}-${sIndex}`;
-                                                const isExpanded = expandedSections[sectionKey];
+                                                const isExpanded = expandedSections[sectionKey] || searchQuery.trim() !== '';
                                                 const sectionChecked = section.questions.filter((_, qIndex) =>
                                                     checkedItems[`${phase.id}-${sIndex}-${qIndex}`]
                                                 ).length;
@@ -656,7 +1238,9 @@
                                                                     size={16}
                                                                     className={`transition-transform duration-200 ${darkMode ? 'text-zinc-600' : 'text-zinc-400'} ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
                                                                 />
-                                                                <h3 className={`text-sm font-medium ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>{section.title}</h3>
+                                                                <h3 className={`text-sm font-medium ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                                                                    <HighlightText text={section.title} search={searchQuery} />
+                                                                </h3>
                                                             </div>
                                                             <div className="flex items-center gap-3">
                                                                 <div className={`w-16 h-1 rounded-full overflow-hidden ${darkMode ? 'bg-zinc-800' : 'bg-zinc-200'}`}>
@@ -674,7 +1258,9 @@
                                                         {isExpanded && (
                                                             <div className="px-6 pb-5 section-expand">
                                                                 {section.description && (
-                                                                    <p className={`ml-7 mb-4 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>{section.description}</p>
+                                                                    <p className={`ml-7 mb-4 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                                                                        <HighlightText text={section.description} search={searchQuery} />
+                                                                    </p>
                                                                 )}
                                                                 <div className="space-y-3 ml-7">
                                                                     {section.questions.map((question, qIndex) => {
@@ -697,7 +1283,7 @@
                                                                                     </button>
                                                                                     <div className="flex-1 min-w-0">
                                                                                         <span className={`text-sm leading-relaxed ${isChecked ? (darkMode ? 'text-zinc-600' : 'text-zinc-400') : (darkMode ? 'text-zinc-300' : 'text-zinc-700')}`}>
-                                                                                            {question}
+                                                                                            <HighlightText text={question} search={searchQuery} />
                                                                                         </span>
                                                                                         <textarea
                                                                                             placeholder="Add notes..."
@@ -723,24 +1309,8 @@
                             })}
                         </div>
 
-                        {/* Footer */}
-                        <div className={`rounded-2xl p-6 mt-8 border ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
-                            <div className="flex items-start gap-3">
-                                <BookOpen size={18} className={darkMode ? 'text-zinc-600' : 'text-zinc-400'} />
-                                <div>
-                                    <h3 className={`text-sm font-medium mb-2 ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>How to use this framework</h3>
-                                    <ul className={`text-sm space-y-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                                        <li>Work through each phase sequentially for best results</li>
-                                        <li>Check off questions as you answer them and document decisions in the notes</li>
-                                        <li>Export your progress as markdown for documentation</li>
-                                        <li>Not every question applies to every project—adapt as needed</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <p className={`text-center text-xs mt-6 ${darkMode ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                            Built for architects who care about details
+                        <p className={`text-center text-xs mt-8 ${darkMode ? 'text-zinc-700' : 'text-zinc-400'}`}>
+                            {totalQuestions} questions across {framework.length} phases · Progress auto-saved locally
                         </p>
                     </div>
                 </div>
