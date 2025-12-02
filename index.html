@@ -68,17 +68,6 @@
         .light .hover-lift:hover {
             box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
         }
-
-        mark {
-            background-color: #fef08a;
-            color: inherit;
-            border-radius: 2px;
-            padding: 0 2px;
-        }
-
-        .dark mark {
-            background-color: #854d0e;
-        }
     </style>
 </head>
 <body>
@@ -128,10 +117,21 @@
             </svg>
         );
 
-        const Search = ({ size = 20, className = "" }) => (
+        const Plus = ({ size = 20, className = "" }) => (
             <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.3-4.3"/>
+                <path d="M5 12h14"/><path d="M12 5v14"/>
+            </svg>
+        );
+
+        const X = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+        );
+
+        const Users = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
         );
 
@@ -201,16 +201,6 @@
             );
         };
 
-        // Highlight search matches
-        const HighlightText = ({ text, search }) => {
-            if (!search.trim()) return text;
-            const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            const parts = text.split(regex);
-            return parts.map((part, i) =>
-                regex.test(part) ? <mark key={i}>{part}</mark> : part
-            );
-        };
-
         const STORAGE_KEY = 'arch-framework-data';
 
         const ArchitectureFramework = () => {
@@ -218,7 +208,8 @@
             const [checkedItems, setCheckedItems] = useState({});
             const [projectName, setProjectName] = useState('');
             const [notes, setNotes] = useState({});
-            const [searchQuery, setSearchQuery] = useState('');
+            const [stakeholders, setStakeholders] = useState([]);
+            const [newStakeholder, setNewStakeholder] = useState({ name: '', role: '' });
             const [lastSaved, setLastSaved] = useState(null);
             const [darkMode, setDarkMode] = useState(() => {
                 if (typeof window !== 'undefined') {
@@ -239,6 +230,7 @@
                         if (data.notes) setNotes(data.notes);
                         if (data.projectName) setProjectName(data.projectName);
                         if (data.expandedSections) setExpandedSections(data.expandedSections);
+                        if (data.stakeholders) setStakeholders(data.stakeholders);
                         setLastSaved(new Date(data.savedAt));
                     }
                 } catch (e) {
@@ -255,6 +247,7 @@
                             notes,
                             projectName,
                             expandedSections,
+                            stakeholders,
                             savedAt: new Date().toISOString()
                         };
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -264,7 +257,7 @@
                     }
                 }, 500);
                 return () => clearTimeout(timeoutId);
-            }, [checkedItems, notes, projectName, expandedSections]);
+            }, [checkedItems, notes, projectName, expandedSections, stakeholders]);
 
             useEffect(() => {
                 document.documentElement.classList.toggle('dark', darkMode);
@@ -1013,14 +1006,36 @@
                     setNotes({});
                     setProjectName('');
                     setExpandedSections({});
+                    setStakeholders([]);
                     localStorage.removeItem(STORAGE_KEY);
                 }
+            };
+
+            const addStakeholder = () => {
+                if (newStakeholder.name.trim()) {
+                    setStakeholders(prev => [...prev, { ...newStakeholder, id: Date.now() }]);
+                    setNewStakeholder({ name: '', role: '' });
+                }
+            };
+
+            const removeStakeholder = (id) => {
+                setStakeholders(prev => prev.filter(s => s.id !== id));
             };
 
             const exportNotes = () => {
                 let markdown = `# Architecture Framework: ${projectName || 'Untitled Project'}\n\n`;
                 markdown += `**Progress**: ${calculateProgress()}%\n\n`;
                 markdown += `**Date**: ${new Date().toLocaleDateString()}\n\n`;
+
+                if (stakeholders.length > 0) {
+                    markdown += `## Stakeholders\n\n`;
+                    markdown += `| Name | Role |\n|------|------|\n`;
+                    stakeholders.forEach(s => {
+                        markdown += `| ${s.name} | ${s.role || '-'} |\n`;
+                    });
+                    markdown += `\n`;
+                }
+
                 markdown += `---\n\n`;
 
                 framework.forEach(phase => {
@@ -1053,31 +1068,6 @@
                 URL.revokeObjectURL(url);
             };
 
-            // Filter framework based on search
-            const filteredFramework = useMemo(() => {
-                if (!searchQuery.trim()) return framework;
-
-                const query = searchQuery.toLowerCase();
-                return framework.map(phase => {
-                    const filteredSections = phase.sections.map(section => {
-                        const filteredQuestions = section.questions.filter(q =>
-                            q.toLowerCase().includes(query)
-                        );
-                        return { ...section, questions: filteredQuestions };
-                    }).filter(section =>
-                        section.questions.length > 0 ||
-                        section.title.toLowerCase().includes(query) ||
-                        section.description?.toLowerCase().includes(query)
-                    );
-
-                    return { ...phase, sections: filteredSections };
-                }).filter(phase =>
-                    phase.sections.length > 0 ||
-                    phase.phase.toLowerCase().includes(query) ||
-                    phase.description.toLowerCase().includes(query)
-                );
-            }, [searchQuery]);
-
             const totalQuestions = framework.reduce((acc, phase) =>
                 acc + phase.sections.reduce((sAcc, section) => sAcc + section.questions.length, 0), 0
             );
@@ -1105,7 +1095,7 @@
                                         A comprehensive checklist for designing robust, scalable systems. {totalQuestions} questions across {framework.length} phases.
                                     </p>
 
-                                    <div className="mb-4">
+                                    <div>
                                         <label className={`block text-xs font-medium mb-1.5 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Project Name</label>
                                         <input
                                             type="text"
@@ -1113,18 +1103,6 @@
                                             value={projectName}
                                             onChange={(e) => setProjectName(e.target.value)}
                                             className={`w-full max-w-sm px-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
-                                        />
-                                    </div>
-
-                                    {/* Search */}
-                                    <div className="relative">
-                                        <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`} />
-                                        <input
-                                            type="text"
-                                            placeholder="Search questions..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className={`w-full max-w-sm pl-9 pr-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
                                         />
                                     </div>
                                 </div>
@@ -1177,18 +1155,63 @@
                             </button>
                         </div>
 
-                        {/* Search results info */}
-                        {searchQuery && (
-                            <div className={`mb-4 px-1 text-sm ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                                {filteredFramework.reduce((acc, phase) =>
-                                    acc + phase.sections.reduce((sAcc, section) => sAcc + section.questions.length, 0), 0
-                                )} questions match "{searchQuery}"
+                        {/* Stakeholders */}
+                        <div className={`rounded-2xl p-5 mb-4 border transition-colors duration-300 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                            <div className="flex items-center gap-2 mb-4">
+                                <Users size={18} className={darkMode ? 'text-zinc-500' : 'text-zinc-400'} />
+                                <h2 className={`text-sm font-semibold ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>Stakeholders</h2>
                             </div>
-                        )}
+
+                            {stakeholders.length > 0 && (
+                                <div className="mb-4 space-y-2">
+                                    {stakeholders.map((s) => (
+                                        <div key={s.id} className={`flex items-center justify-between px-3 py-2 rounded-lg ${darkMode ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
+                                            <div className="flex-1 min-w-0">
+                                                <span className={`text-sm font-medium ${darkMode ? 'text-zinc-200' : 'text-zinc-800'}`}>{s.name}</span>
+                                                {s.role && (
+                                                    <span className={`ml-2 text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>({s.role})</span>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => removeStakeholder(s.id)}
+                                                className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-zinc-700 text-zinc-500' : 'hover:bg-zinc-200 text-zinc-400'}`}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Name"
+                                    value={newStakeholder.name}
+                                    onChange={(e) => setNewStakeholder(prev => ({ ...prev, name: e.target.value }))}
+                                    onKeyDown={(e) => e.key === 'Enter' && addStakeholder()}
+                                    className={`flex-1 px-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Role (optional)"
+                                    value={newStakeholder.role}
+                                    onChange={(e) => setNewStakeholder(prev => ({ ...prev, role: e.target.value }))}
+                                    onKeyDown={(e) => e.key === 'Enter' && addStakeholder()}
+                                    className={`flex-1 px-3 py-2 text-sm border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                                />
+                                <button
+                                    onClick={addStakeholder}
+                                    className={`px-3 py-2 rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
+                                >
+                                    <Plus size={18} />
+                                </button>
+                            </div>
+                        </div>
 
                         {/* Phases */}
                         <div className="space-y-4">
-                            {filteredFramework.map((phase) => {
+                            {framework.map((phase) => {
                                 const phaseChecked = phase.sections.reduce((acc, section, sIndex) => {
                                     return acc + section.questions.filter((_, qIndex) =>
                                         checkedItems[`${phase.id}-${sIndex}-${qIndex}`]
@@ -1205,10 +1228,10 @@
                                                     <span className={`text-3xl font-semibold tabular-nums ${darkMode ? 'text-zinc-700' : 'text-zinc-300'}`}>{phase.number}</span>
                                                     <div className="flex-1">
                                                         <h2 className={`text-lg font-semibold ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
-                                                            <HighlightText text={phase.phase} search={searchQuery} />
+                                                            {phase.phase}
                                                         </h2>
                                                         <p className={`text-sm mt-1.5 leading-relaxed ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                                                            <HighlightText text={phase.description} search={searchQuery} />
+                                                            {phase.description}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1222,7 +1245,7 @@
                                         <div className={`divide-y ${darkMode ? 'divide-zinc-800' : 'divide-zinc-100'}`}>
                                             {phase.sections.map((section, sIndex) => {
                                                 const sectionKey = `${phase.id}-${sIndex}`;
-                                                const isExpanded = expandedSections[sectionKey] || searchQuery.trim() !== '';
+                                                const isExpanded = expandedSections[sectionKey];
                                                 const sectionChecked = section.questions.filter((_, qIndex) =>
                                                     checkedItems[`${phase.id}-${sIndex}-${qIndex}`]
                                                 ).length;
@@ -1239,7 +1262,7 @@
                                                                     className={`transition-transform duration-200 ${darkMode ? 'text-zinc-600' : 'text-zinc-400'} ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
                                                                 />
                                                                 <h3 className={`text-sm font-medium ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
-                                                                    <HighlightText text={section.title} search={searchQuery} />
+                                                                    {section.title}
                                                                 </h3>
                                                             </div>
                                                             <div className="flex items-center gap-3">
@@ -1259,7 +1282,7 @@
                                                             <div className="px-6 pb-5 section-expand">
                                                                 {section.description && (
                                                                     <p className={`ml-7 mb-4 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                                                                        <HighlightText text={section.description} search={searchQuery} />
+                                                                        {section.description}
                                                                     </p>
                                                                 )}
                                                                 <div className="space-y-3 ml-7">
@@ -1283,7 +1306,7 @@
                                                                                     </button>
                                                                                     <div className="flex-1 min-w-0">
                                                                                         <span className={`text-sm leading-relaxed ${isChecked ? (darkMode ? 'text-zinc-600' : 'text-zinc-400') : (darkMode ? 'text-zinc-300' : 'text-zinc-700')}`}>
-                                                                                            <HighlightText text={question} search={searchQuery} />
+                                                                                            {question}
                                                                                         </span>
                                                                                         <textarea
                                                                                             placeholder="Add notes..."
