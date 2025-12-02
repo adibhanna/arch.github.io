@@ -161,6 +161,37 @@
             </svg>
         );
 
+        const HelpCircle = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>
+            </svg>
+        );
+
+        // Tooltip Component
+        const Tooltip = ({ children, content, darkMode }) => {
+            const [show, setShow] = useState(false);
+
+            if (!content) return children;
+
+            return (
+                <div className="relative inline-flex">
+                    <div
+                        onMouseEnter={() => setShow(true)}
+                        onMouseLeave={() => setShow(false)}
+                        onClick={() => setShow(!show)}
+                        className="cursor-help"
+                    >
+                        {children}
+                    </div>
+                    {show && (
+                        <div className={`absolute z-50 left-6 top-0 w-64 p-3 text-xs rounded-lg shadow-lg border ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-600'}`}>
+                            {content}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         // Progress Ring Component
         const ProgressRing = ({ progress, size = 100, darkMode }) => {
             const strokeWidth = 6;
@@ -275,28 +306,28 @@
                             title: 'Problem Space',
                             description: 'Define the core problem and understand who you\'re building for.',
                             questions: [
-                                'What problem are we solving? (One sentence)',
-                                'What happens if we build nothing?',
-                                'Who are the primary users? Secondary users?',
-                                'What are their key pain points and frustrations?',
-                                'What does success look like? How will we measure it?',
-                                'What are the business goals and KPIs?',
-                                'Who are the key stakeholders? What are their priorities?',
-                                'Are there competing solutions? What are their limitations?'
+                                { q: 'What problem are we solving? (One sentence)', tip: 'Force clarity by limiting to one sentence. If you can\'t explain it simply, you don\'t understand it well enough. This becomes your north star for all decisions.' },
+                                { q: 'What happens if we build nothing?', tip: 'Understanding the cost of inaction helps prioritize and justify the project. Sometimes the answer reveals the problem isn\'t worth solving.' },
+                                { q: 'Who are the primary users? Secondary users?', tip: 'Primary users are who you\'re optimizing for. Secondary users (admins, support staff) have different needs. Design for primary, accommodate secondary.' },
+                                { q: 'What are their key pain points and frustrations?', tip: 'Focus on problems, not solutions. Users often ask for features when they really need outcomes. Dig deeper with "why" questions.' },
+                                { q: 'What does success look like? How will we measure it?', tip: 'Define concrete, measurable outcomes. "Faster" isn\'t measurable; "reduce checkout time from 3 min to 30 sec" is. This prevents scope creep.' },
+                                { q: 'What are the business goals and KPIs?', tip: 'Align technical decisions with business outcomes. Revenue, user growth, cost reduction, time-to-market—know which metrics matter most.' },
+                                { q: 'Who are the key stakeholders? What are their priorities?', tip: 'Identify decision-makers, influencers, and blockers. Understanding their priorities helps navigate trade-offs and get buy-in.' },
+                                { q: 'Are there competing solutions? What are their limitations?', tip: 'Study existing solutions (internal or external). Learn from their mistakes and identify opportunities for differentiation.' }
                             ]
                         },
                         {
                             title: 'Scope & Constraints',
                             description: 'Establish boundaries and identify limitations early.',
                             questions: [
-                                'What\'s in scope for v1? What\'s explicitly out of scope?',
-                                'What\'s the timeline? Are there hard deadlines?',
-                                'What\'s the budget? (Infrastructure, team, tooling)',
-                                'What existing systems must we integrate with?',
-                                'Any regulatory/compliance requirements? (GDPR, HIPAA, SOC2, PCI-DSS)',
-                                'Any technical constraints? (Must use X, cannot use Y)',
-                                'What are the non-negotiable requirements vs nice-to-haves?',
-                                'Are there organizational or political constraints to consider?'
+                                { q: 'What\'s in scope for v1? What\'s explicitly out of scope?', tip: 'Write down what you WON\'T build. This prevents scope creep and sets expectations. "Out of scope" is as important as "in scope".' },
+                                { q: 'What\'s the timeline? Are there hard deadlines?', tip: 'Distinguish between real deadlines (regulatory, contractual) and artificial ones. Hard deadlines constrain scope; soft deadlines can flex.' },
+                                { q: 'What\'s the budget? (Infrastructure, team, tooling)', tip: 'Include all costs: cloud infrastructure, third-party services, team salaries, tooling licenses. Budget constraints drive build vs buy decisions.' },
+                                { q: 'What existing systems must we integrate with?', tip: 'Legacy systems often dictate architecture choices. Understand their APIs, data formats, availability, and limitations upfront.' },
+                                { q: 'Any regulatory/compliance requirements? (GDPR, HIPAA, SOC2, PCI-DSS)', tip: 'Compliance requirements affect data storage, encryption, audit logging, and geography. Retrofitting compliance is expensive—design for it.' },
+                                { q: 'Any technical constraints? (Must use X, cannot use Y)', tip: 'Organizational standards, existing expertise, vendor relationships, or security policies may limit technology choices.' },
+                                { q: 'What are the non-negotiable requirements vs nice-to-haves?', tip: 'Use MoSCoW (Must/Should/Could/Won\'t) or similar. This helps when you inevitably need to cut scope.' },
+                                { q: 'Are there organizational or political constraints to consider?', tip: 'Team structures, reporting lines, budget ownership, and inter-team dynamics affect architecture. Conway\'s Law is real.' }
                             ]
                         }
                     ]
@@ -311,45 +342,45 @@
                             title: 'Scale & Performance',
                             description: 'Understand traffic patterns and growth projections to size your system correctly.',
                             questions: [
-                                'Expected users: Day 1? Month 1? Year 1? Year 3?',
-                                'Requests per second: Average? Peak? Burst capacity needed?',
-                                'Data volume: Initial size? Daily growth rate? Total after 1 year?',
-                                'Latency requirements: P50? P95? P99? Hard limits?',
-                                'Throughput requirements: Reads/sec? Writes/sec?',
-                                'Geographic distribution: Single region? Multi-region? Global?',
-                                'Traffic patterns: Steady? Bursty? Predictable spikes? Seasonal?',
-                                'What are the expected concurrent users at peak?',
-                                'Are there batch processing requirements? Volume? Frequency?'
+                                { q: 'Expected users: Day 1? Month 1? Year 1? Year 3?', tip: 'Get realistic projections, not optimistic marketing numbers. Design for Year 1 with a path to Year 3. Don\'t over-engineer for Day 1.' },
+                                { q: 'Requests per second: Average? Peak? Burst capacity needed?', tip: 'Peak can be 10-100x average. Know your traffic shape. Burst capacity = handling sudden spikes without degradation.' },
+                                { q: 'Data volume: Initial size? Daily growth rate? Total after 1 year?', tip: 'Calculate storage needs, backup costs, and query performance implications. Data grows faster than you expect.' },
+                                { q: 'Latency requirements: P50? P95? P99? Hard limits?', tip: 'P50 is median, P99 is worst case for 99% of requests. User-facing usually needs P95 < 200ms. P99 catches tail latency issues.' },
+                                { q: 'Throughput requirements: Reads/sec? Writes/sec?', tip: 'Read-heavy systems (100:1) vs write-heavy (1:1) need different architectures. This drives database and caching decisions.' },
+                                { q: 'Geographic distribution: Single region? Multi-region? Global?', tip: 'Multi-region adds complexity and cost but improves latency and availability. Global requires careful data residency planning.' },
+                                { q: 'Traffic patterns: Steady? Bursty? Predictable spikes? Seasonal?', tip: 'Bursty traffic needs auto-scaling. Predictable spikes (Black Friday) can be pre-scaled. Steady traffic is easiest to plan for.' },
+                                { q: 'What are the expected concurrent users at peak?', tip: 'Concurrent users ≠ requests/sec. One user might make 10 requests. This affects connection pooling, session storage, and WebSocket capacity.' },
+                                { q: 'Are there batch processing requirements? Volume? Frequency?', tip: 'Batch jobs compete for resources with real-time traffic. Schedule them during off-peak or use separate infrastructure.' }
                             ]
                         },
                         {
                             title: 'Availability & Reliability',
                             description: 'Define uptime targets and understand the cost of failures.',
                             questions: [
-                                'Required uptime: 99%? 99.9%? 99.99%? 99.999%?',
-                                'What\'s the acceptable downtime per month/year?',
-                                'Recovery Time Objective (RTO)? How fast must we recover?',
-                                'Recovery Point Objective (RPO)? How much data loss is acceptable?',
-                                'Can we have scheduled maintenance windows? When?',
-                                'What\'s the business cost of downtime per hour?',
-                                'What SLAs do we need to offer to customers?',
-                                'Are there external dependencies with their own SLAs?',
-                                'What\'s the acceptable error rate? (e.g., 0.1% of requests)'
+                                { q: 'Required uptime: 99%? 99.9%? 99.99%? 99.999%?', tip: '99% = 3.65 days downtime/year. 99.9% = 8.76 hours. 99.99% = 52.6 minutes. Each "nine" costs exponentially more.' },
+                                { q: 'What\'s the acceptable downtime per month/year?', tip: 'Translate percentages to real time. 99.9% monthly = 43 minutes. Is that one 43-min outage or forty-three 1-min blips?' },
+                                { q: 'Recovery Time Objective (RTO)? How fast must we recover?', tip: 'RTO is max acceptable downtime after a disaster. 4-hour RTO needs different infrastructure than 15-minute RTO.' },
+                                { q: 'Recovery Point Objective (RPO)? How much data loss is acceptable?', tip: 'RPO is max acceptable data loss. Zero RPO requires synchronous replication. 1-hour RPO allows hourly backups.' },
+                                { q: 'Can we have scheduled maintenance windows? When?', tip: 'Maintenance windows simplify operations but may not be acceptable for global 24/7 services. Plan for zero-downtime deployments if needed.' },
+                                { q: 'What\'s the business cost of downtime per hour?', tip: 'Quantify in dollars: lost revenue, SLA penalties, customer churn, reputation damage. This justifies infrastructure investment.' },
+                                { q: 'What SLAs do we need to offer to customers?', tip: 'External SLAs should be less aggressive than internal targets. Leave margin for error. SLA breaches have financial and legal consequences.' },
+                                { q: 'Are there external dependencies with their own SLAs?', tip: 'Your availability can\'t exceed your dependencies\' availability. If a critical API offers 99.9%, you can\'t promise 99.99%.' },
+                                { q: 'What\'s the acceptable error rate? (e.g., 0.1% of requests)', tip: 'Error budgets define acceptable failure. 0.1% error rate = 1 in 1000 requests can fail. This guides retry logic and alerting thresholds.' }
                             ]
                         },
                         {
                             title: 'Data Requirements',
                             description: 'Clarify consistency needs, access patterns, and data lifecycle.',
                             questions: [
-                                'Strong consistency needed? Or eventual consistency OK? Where?',
-                                'Read-heavy or write-heavy workload? Ratio?',
-                                'Data retention requirements? Legal minimums/maximums?',
-                                'Backup frequency needed? Full vs incremental?',
-                                'Any data sovereignty requirements? Data residency laws?',
-                                'PII or sensitive data involved? Classification levels?',
-                                'Real-time data needs vs batch processing acceptable?',
-                                'Data archival strategy? Hot/warm/cold storage tiers?',
-                                'Audit trail requirements? Immutability needs?'
+                                { q: 'Strong consistency needed? Or eventual consistency OK? Where?', tip: 'Strong consistency = every read sees latest write. Eventual = reads may be stale temporarily. Financial data usually needs strong; social feeds can be eventual.' },
+                                { q: 'Read-heavy or write-heavy workload? Ratio?', tip: 'Read-heavy (100:1) benefits from caching and read replicas. Write-heavy (1:1) needs careful database selection and write optimization.' },
+                                { q: 'Data retention requirements? Legal minimums/maximums?', tip: 'Some data must be kept (audit logs, financial records). Some must be deleted (GDPR). Know the rules for each data type.' },
+                                { q: 'Backup frequency needed? Full vs incremental?', tip: 'Full backups are slow but simple to restore. Incrementals are fast but complex. Frequency depends on RPO and data change rate.' },
+                                { q: 'Any data sovereignty requirements? Data residency laws?', tip: 'Some countries require data to stay within borders (EU, China, Russia). This affects cloud region selection and replication strategy.' },
+                                { q: 'PII or sensitive data involved? Classification levels?', tip: 'Classify data by sensitivity: public, internal, confidential, restricted. Each level has different encryption, access, and audit requirements.' },
+                                { q: 'Real-time data needs vs batch processing acceptable?', tip: 'Real-time requires streaming architecture (Kafka, Kinesis). Batch is simpler and cheaper. Many use cases that seem real-time actually tolerate minutes of delay.' },
+                                { q: 'Data archival strategy? Hot/warm/cold storage tiers?', tip: 'Hot = frequent access, high cost. Cold = rare access, low cost. Archive old data to reduce costs and improve query performance.' },
+                                { q: 'Audit trail requirements? Immutability needs?', tip: 'Regulated industries need immutable audit logs. Consider append-only tables, write-once storage, or blockchain for tamper-proof records.' }
                             ]
                         }
                     ]
@@ -364,43 +395,43 @@
                             title: 'Core Entities',
                             description: 'Identify the key concepts and how they relate to each other.',
                             questions: [
-                                'What are the main entities/concepts in the domain?',
-                                'What are the relationships between entities?',
-                                'Which entities are immutable? Which change frequently?',
-                                'What\'s the cardinality? (1:1, 1:many, many:many)',
-                                'What are the access patterns for each entity?',
-                                'What\'s the source of truth for each entity?',
-                                'What are the key identifiers? Natural keys vs surrogate keys?',
-                                'What attributes are required vs optional?',
-                                'Are there temporal aspects? (Versioning, history, effective dates)'
+                                { q: 'What are the main entities/concepts in the domain?', tip: 'List nouns from requirements: User, Order, Product, Payment. These become your tables/collections and often your services.' },
+                                { q: 'What are the relationships between entities?', tip: 'Draw an entity-relationship diagram. User has many Orders, Order has many Products. Relationships drive join strategies and API design.' },
+                                { q: 'Which entities are immutable? Which change frequently?', tip: 'Immutable data (events, audit logs) is easier to cache and replicate. Mutable data (user profiles) needs careful consistency handling.' },
+                                { q: 'What\'s the cardinality? (1:1, 1:many, many:many)', tip: 'Cardinality affects table design. Many:many needs junction tables. High-cardinality relationships (user has 1M followers) need special handling.' },
+                                { q: 'What are the access patterns for each entity?', tip: 'How will data be queried? By ID? By date range? Full-text search? Access patterns determine indexes and sometimes database choice.' },
+                                { q: 'What\'s the source of truth for each entity?', tip: 'In distributed systems, one service owns each entity. Others get copies. This prevents conflicting updates and simplifies consistency.' },
+                                { q: 'What are the key identifiers? Natural keys vs surrogate keys?', tip: 'Natural keys (email, SSN) have meaning but can change. Surrogate keys (UUID, auto-increment) are stable but meaningless. Often use both.' },
+                                { q: 'What attributes are required vs optional?', tip: 'Required fields must be validated. Optional fields complicate queries (NULL handling). Minimize optional fields for cleaner data.' },
+                                { q: 'Are there temporal aspects? (Versioning, history, effective dates)', tip: 'Do you need to query "what was the price on Jan 1"? Temporal data requires special schema design (valid_from, valid_to columns).' }
                             ]
                         },
                         {
                             title: 'Domain Boundaries',
                             description: 'Define logical separations that will guide your architecture.',
                             questions: [
-                                'What are the logical domains/bounded contexts?',
-                                'Which domains are core vs supporting vs generic?',
-                                'Where do domain boundaries align with team boundaries?',
-                                'Which domains can evolve independently?',
-                                'What events happen across domain boundaries?',
-                                'Which domains have different consistency requirements?',
-                                'Where are the transaction boundaries?',
-                                'What data needs to be replicated across domains?'
+                                { q: 'What are the logical domains/bounded contexts?', tip: 'From Domain-Driven Design: areas where terms have specific meaning. "Customer" means different things to Sales vs Support. Separate these.' },
+                                { q: 'Which domains are core vs supporting vs generic?', tip: 'Core = competitive advantage, build it. Supporting = necessary but not differentiating. Generic = commodity, buy it (auth, payments).' },
+                                { q: 'Where do domain boundaries align with team boundaries?', tip: 'Conway\'s Law: system structure mirrors org structure. Align boundaries with teams for clear ownership and reduced coordination.' },
+                                { q: 'Which domains can evolve independently?', tip: 'Loosely coupled domains can be deployed separately. Tightly coupled ones must be coordinated. Aim for loose coupling.' },
+                                { q: 'What events happen across domain boundaries?', tip: 'Events decouple domains. OrderPlaced, PaymentReceived, ShipmentSent. These become your integration contracts.' },
+                                { q: 'Which domains have different consistency requirements?', tip: 'Payments need strong consistency. Recommendations can be eventually consistent. Don\'t apply the strictest requirement everywhere.' },
+                                { q: 'Where are the transaction boundaries?', tip: 'Transactions within a domain are easy. Cross-domain transactions are hard (sagas, 2PC). Design to minimize cross-domain transactions.' },
+                                { q: 'What data needs to be replicated across domains?', tip: 'Some data is needed everywhere (user info). Replicate via events or shared cache. Accept eventual consistency for replicated data.' }
                             ]
                         },
                         {
                             title: 'Data Storage Strategy',
                             description: 'Choose the right storage solutions for your data patterns.',
                             questions: [
-                                'What database type fits each data pattern? (Relational, Document, Key-Value, Graph, Time-series)',
-                                'What indexing strategy is needed? Primary, secondary, composite indexes?',
-                                'Partitioning/sharding strategy? By what key? How many partitions?',
-                                'Denormalization trade-offs? Where is it worth it?',
-                                'What are the query patterns? Simple lookups vs complex queries?',
-                                'Full-text search requirements? Which fields?',
-                                'Caching strategy at the data layer? Cache-aside, write-through, write-behind?',
-                                'Data migration strategy from existing systems?'
+                                { q: 'What database type fits each data pattern? (Relational, Document, Key-Value, Graph, Time-series)', tip: 'Relational for transactions, Document for flexible schemas, Key-Value for caching, Graph for relationships, Time-series for metrics. Match the tool to the problem.' },
+                                { q: 'What indexing strategy is needed? Primary, secondary, composite indexes?', tip: 'Indexes speed reads but slow writes. Index columns used in WHERE, JOIN, ORDER BY. Composite indexes for multi-column queries.' },
+                                { q: 'Partitioning/sharding strategy? By what key? How many partitions?', tip: 'Partition by a key that distributes evenly and matches query patterns. User ID for user data, timestamp for time-series. Start with few partitions.' },
+                                { q: 'Denormalization trade-offs? Where is it worth it?', tip: 'Denormalization speeds reads by duplicating data. Worth it for hot read paths. Increases write complexity and storage. Don\'t denormalize prematurely.' },
+                                { q: 'What are the query patterns? Simple lookups vs complex queries?', tip: 'Simple lookups = key-value or document store. Complex joins = relational. Analytics = columnar (BigQuery, Redshift). Match database to query pattern.' },
+                                { q: 'Full-text search requirements? Which fields?', tip: 'Full-text search usually needs a dedicated engine (Elasticsearch, Algolia). Database full-text is limited but avoids another system.' },
+                                { q: 'Caching strategy at the data layer? Cache-aside, write-through, write-behind?', tip: 'Cache-aside: app manages cache. Write-through: write to cache and DB. Write-behind: write to cache, async to DB. Each has consistency trade-offs.' },
+                                { q: 'Data migration strategy from existing systems?', tip: 'Big bang (downtime) vs gradual (dual-write + backfill). Plan for rollback. Validate data integrity. Migration often takes longer than expected.' }
                             ]
                         }
                     ]
@@ -415,13 +446,13 @@
                             title: 'API Strategy',
                             description: 'Define your overall approach to API design.',
                             questions: [
-                                'API style: REST? GraphQL? gRPC? Event-driven? Why?',
-                                'Who are the API consumers? Internal services? External partners? Public developers?',
-                                'Synchronous vs asynchronous communication? Where?',
-                                'Request/response format: JSON? Protocol Buffers? XML?',
-                                'API gateway needed? What functionality? (Auth, rate limiting, transformation)',
-                                'Service mesh requirements? (Istio, Linkerd, Consul)',
-                                'How will APIs be discovered? Service registry? API catalog?'
+                                { q: 'API style: REST? GraphQL? gRPC? Event-driven? Why?', tip: 'REST for simplicity and caching. GraphQL for flexible queries. gRPC for performance and streaming. Event-driven for async workflows. Choose based on use case.' },
+                                { q: 'Who are the API consumers? Internal services? External partners? Public developers?', tip: 'Internal APIs can change faster. External APIs need stability, versioning, and documentation. Public APIs need rate limiting and abuse protection.' },
+                                { q: 'Synchronous vs asynchronous communication? Where?', tip: 'Sync for immediate responses (user-facing). Async for long operations, decoupling, and reliability. Many systems use both.' },
+                                { q: 'Request/response format: JSON? Protocol Buffers? XML?', tip: 'JSON for humans and web. Protocol Buffers for performance and type safety. XML for legacy enterprise. JSON is the safe default.' },
+                                { q: 'API gateway needed? What functionality? (Auth, rate limiting, transformation)', tip: 'Gateways centralize cross-cutting concerns. Useful for auth, rate limiting, logging, and transforming legacy APIs. Adds latency and complexity.' },
+                                { q: 'Service mesh requirements? (Istio, Linkerd, Consul)', tip: 'Service meshes handle service-to-service communication: mTLS, retries, circuit breakers. Valuable at scale but complex to operate.' },
+                                { q: 'How will APIs be discovered? Service registry? API catalog?', tip: 'Service registries (Consul, Eureka) for runtime discovery. API catalogs for documentation and governance. Both matter at scale.' }
                             ]
                         },
                         {
@@ -1046,11 +1077,12 @@
                         if (section.description) {
                             markdown += `*${section.description}*\n\n`;
                         }
-                        section.questions.forEach((question, qIndex) => {
+                        section.questions.forEach((questionItem, qIndex) => {
                             const key = `${phase.id}-${sIndex}-${qIndex}`;
                             const isChecked = checkedItems[key];
                             const note = notes[key];
-                            markdown += `- [${isChecked ? 'x' : ' '}] ${question}\n`;
+                            const questionText = typeof questionItem === 'string' ? questionItem : questionItem.q;
+                            markdown += `- [${isChecked ? 'x' : ' '}] ${questionText}\n`;
                             if (note) {
                                 markdown += `\n  **Answer**: ${note}\n\n`;
                             }
@@ -1079,7 +1111,7 @@
                         <div className={`hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 border-r transition-colors duration-300 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
                             <div className="flex-1 flex flex-col overflow-y-auto p-5">
                                 {/* Header */}
-                                <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center justify-between mb-4">
                                     <h1 className={`text-lg font-semibold tracking-tight ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
                                         Architecture Framework
                                     </h1>
@@ -1091,6 +1123,11 @@
                                         {darkMode ? <Sun size={16} /> : <Moon size={16} />}
                                     </button>
                                 </div>
+
+                                {/* Description */}
+                                <p className={`text-xs leading-relaxed mb-5 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                                    A structured checklist to guide system design decisions. Work through each phase, check off questions as you answer them, and add notes to document your decisions. Export your progress as Markdown when done.
+                                </p>
 
                                 {/* Progress */}
                                 <div className="flex justify-center mb-6">
@@ -1311,10 +1348,12 @@
                                                                             </p>
                                                                         )}
                                                                         <div className="space-y-2 ml-6">
-                                                                            {section.questions.map((question, qIndex) => {
+                                                                            {section.questions.map((questionItem, qIndex) => {
                                                                                 const itemKey = `${phase.id}-${sIndex}-${qIndex}`;
                                                                                 const isChecked = checkedItems[itemKey];
                                                                                 const note = notes[itemKey] || '';
+                                                                                const questionText = typeof questionItem === 'string' ? questionItem : questionItem.q;
+                                                                                const questionTip = typeof questionItem === 'object' ? questionItem.tip : null;
 
                                                                                 return (
                                                                                     <div key={qIndex} className={`p-3 rounded-lg transition-colors ${isChecked ? (darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50') : ''}`}>
@@ -1330,9 +1369,16 @@
                                                                                                 )}
                                                                                             </button>
                                                                                             <div className="flex-1 min-w-0">
-                                                                                                <span className={`text-sm leading-relaxed ${isChecked ? (darkMode ? 'text-zinc-600' : 'text-zinc-400') : (darkMode ? 'text-zinc-300' : 'text-zinc-700')}`}>
-                                                                                                    {question}
-                                                                                                </span>
+                                                                                                <div className="flex items-start gap-1.5">
+                                                                                                    <span className={`text-sm leading-relaxed ${isChecked ? (darkMode ? 'text-zinc-600' : 'text-zinc-400') : (darkMode ? 'text-zinc-300' : 'text-zinc-700')}`}>
+                                                                                                        {questionText}
+                                                                                                    </span>
+                                                                                                    {questionTip && (
+                                                                                                        <Tooltip content={questionTip} darkMode={darkMode}>
+                                                                                                            <HelpCircle size={14} className={`flex-shrink-0 mt-0.5 ${darkMode ? 'text-zinc-600 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-600'}`} />
+                                                                                                        </Tooltip>
+                                                                                                    )}
+                                                                                                </div>
                                                                                                 <textarea
                                                                                                     placeholder="Add notes..."
                                                                                                     value={note}
