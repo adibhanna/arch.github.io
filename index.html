@@ -73,6 +73,49 @@
             box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
         }
 
+        /* Custom scrollbar styles */
+        .dark ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #27272a;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #52525b;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #71717a;
+        }
+
+        .light ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .light ::-webkit-scrollbar-track {
+            background: #f4f4f5;
+            border-radius: 4px;
+        }
+        .light ::-webkit-scrollbar-thumb {
+            background: #d4d4d8;
+            border-radius: 4px;
+        }
+        .light ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1aa;
+        }
+
+        /* Firefox scrollbar */
+        .dark * {
+            scrollbar-width: thin;
+            scrollbar-color: #52525b #27272a;
+        }
+        .light * {
+            scrollbar-width: thin;
+            scrollbar-color: #d4d4d8 #f4f4f5;
+        }
+
         /* Mermaid diagram styles */
         .mermaid-preview svg {
             max-width: 100%;
@@ -84,7 +127,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useCallback } = React;
 
         // Icons
         const CheckCircle2 = ({ size = 20, className = "" }) => (
@@ -139,6 +182,12 @@
             </svg>
         );
 
+        const Check = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6 9 17l-5-5"/>
+            </svg>
+        );
+
         const Users = ({ size = 20, className = "" }) => (
             <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
@@ -161,13 +210,6 @@
             <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                 <path d="M3 3v5h5"/>
-            </svg>
-        );
-
-        const Save = ({ size = 20, className = "" }) => (
-            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
             </svg>
         );
 
@@ -255,12 +297,6 @@
             </svg>
         );
 
-        const RotateCcw = ({ size = 20, className = "" }) => (
-            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
-            </svg>
-        );
-
         // Tooltip Component
         const Tooltip = ({ children, content, darkMode }) => {
             const [show, setShow] = useState(false);
@@ -291,6 +327,10 @@
             const [svg, setSvg] = useState('');
             const [error, setError] = useState(null);
             const [zoom, setZoom] = useState(initialZoom);
+            const [isPanning, setIsPanning] = useState(false);
+            const [position, setPosition] = useState({ x: 0, y: 0 });
+            const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+            const containerRef = React.useRef(null);
 
             useEffect(() => {
                 if (!code.trim()) {
@@ -321,9 +361,43 @@
                 renderDiagram();
             }, [code, darkMode, id]);
 
+            // Reset position when zoom changes
+            useEffect(() => {
+                if (zoom === 1) {
+                    setPosition({ x: 0, y: 0 });
+                }
+            }, [zoom]);
+
             const zoomIn = () => setZoom(z => Math.min(z + 0.25, 3));
             const zoomOut = () => setZoom(z => Math.max(z - 0.25, 0.25));
-            const resetZoom = () => setZoom(1);
+            const resetZoom = () => {
+                setZoom(1);
+                setPosition({ x: 0, y: 0 });
+            };
+
+            const handleMouseDown = (e) => {
+                if (zoom > 1) {
+                    setIsPanning(true);
+                    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+                }
+            };
+
+            const handleMouseMove = (e) => {
+                if (isPanning) {
+                    setPosition({
+                        x: e.clientX - dragStart.x,
+                        y: e.clientY - dragStart.y
+                    });
+                }
+            };
+
+            const handleMouseUp = () => {
+                setIsPanning(false);
+            };
+
+            const handleMouseLeave = () => {
+                setIsPanning(false);
+            };
 
             if (!code.trim()) {
                 return (
@@ -342,7 +416,7 @@
             }
 
             return (
-                <div className="relative">
+                <div className="relative h-full">
                     {showControls && (
                         <div className={`absolute top-2 right-2 z-10 flex items-center gap-1 p-1 rounded-lg ${darkMode ? 'bg-zinc-800/90' : 'bg-white/90'} shadow-lg border ${darkMode ? 'border-zinc-700' : 'border-zinc-200'}`}>
                             <button
@@ -366,21 +440,29 @@
                             <button
                                 onClick={resetZoom}
                                 className={`p-1.5 rounded transition-colors ${darkMode ? 'hover:bg-zinc-700 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-600'}`}
-                                title="Reset zoom"
+                                title="Reset zoom & position"
                             >
                                 <RotateCcw size={16} />
                             </button>
                         </div>
                     )}
                     <div
-                        className="mermaid-preview overflow-auto"
-                        style={{ maxHeight: showControls ? '70vh' : 'auto' }}
+                        ref={containerRef}
+                        className="mermaid-preview overflow-hidden h-full"
+                        style={{
+                            maxHeight: showControls ? '100%' : 'auto',
+                            cursor: zoom > 1 ? (isPanning ? 'grabbing' : 'grab') : 'default'
+                        }}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseLeave}
                     >
                         <div
                             style={{
-                                transform: `scale(${zoom})`,
+                                transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
                                 transformOrigin: 'top left',
-                                transition: 'transform 0.2s ease'
+                                transition: isPanning ? 'none' : 'transform 0.2s ease'
                             }}
                             dangerouslySetInnerHTML={{ __html: svg }}
                         />
@@ -439,12 +521,8 @@
             if (!isOpen) return null;
 
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                        onClick={onClose}
-                    />
-                    <div className={`relative w-full max-w-6xl max-h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col ${darkMode ? 'bg-zinc-900' : 'bg-white'}`}>
+                <div className="fixed inset-0 z-50">
+                    <div className={`w-full h-full flex flex-col ${darkMode ? 'bg-zinc-900' : 'bg-white'}`}>
                         <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
                             <h3 className={`font-medium ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>{title}</h3>
                             <button
@@ -454,7 +532,7 @@
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-auto p-6">
+                        <div className="flex-1 overflow-hidden p-6">
                             {children}
                         </div>
                     </div>
@@ -502,9 +580,123 @@
             );
         };
 
-        const STORAGE_KEY = 'arch-framework-data';
+
+        // Generate unique ID
+        const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+        // Default empty project data
+        const createEmptyProjectData = () => ({
+            checkedItems: {},
+            notes: {},
+            codeSnippets: {},
+            codeLanguages: {},
+            diagrams: {},
+            questionLinks: {},
+            stakeholders: [],
+            references: [],
+            expandedSections: {}
+        });
+
+        // Example project with sample data
+        const createExampleProject = () => ({
+            id: 'example-' + generateId(),
+            name: 'Example: E-Commerce Platform',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            data: {
+                checkedItems: {
+                    // Phase 1: Discovery & Problem Definition
+                    '1-0-0': true, '1-0-1': true, '1-0-2': true, '1-0-3': true,
+                    '1-1-0': true, '1-1-1': true, '1-1-2': true,
+                    // Phase 2: Requirements Analysis
+                    '2-0-0': true, '2-0-1': true, '2-0-2': true,
+                    '2-1-0': true, '2-1-1': true,
+                    // Phase 3: High-Level Architecture
+                    '3-0-0': true, '3-0-1': true,
+                    '3-1-0': true
+                },
+                notes: {
+                    // Phase 1: Problem Space
+                    '1-0-0': 'Building a scalable e-commerce platform to handle 100k+ daily active users. Primary goal is to reduce cart abandonment from 70% to 30% and improve checkout conversion by 25%.',
+                    '1-0-1': 'Success metrics:\n- Cart abandonment rate < 30%\n- Page load time < 2s (P95)\n- 99.9% uptime SLA\n- Support 1000 concurrent checkouts\n- Order processing latency < 500ms',
+                    '1-0-2': 'Must integrate with existing inventory management system (SAP). Payment processing through Stripe and PayPal. Shipping via FedEx/UPS/USPS APIs. Tax calculation via Avalara.',
+                    '1-0-3': 'Primary users: Online shoppers (B2C)\nSecondary: Merchant admin users\nTertiary: Customer support agents\n\nPeak usage: 6-10 PM local time, Black Friday/Cyber Monday',
+                    // Phase 1: Scope & Constraints
+                    '1-1-0': 'MVP Timeline: 4 months\nPhase 1: Core shopping + checkout (2 months)\nPhase 2: Recommendations + analytics (1 month)\nPhase 3: Mobile apps (1 month)',
+                    '1-1-1': 'Budget: $500k initial development\nInfra: ~$15k/month estimated\nTeam: 2 backend, 2 frontend, 1 DevOps, 1 QA',
+                    '1-1-2': 'Tech constraints:\n- Must use AWS (existing contract)\n- PostgreSQL for transactional data\n- Team experienced in Node.js/React\n- PCI DSS compliance required for payments',
+                    // Phase 2: Scale & Performance
+                    '2-0-0': 'Day 1: 10k users\nMonth 1: 50k users\nYear 1: 500k users\nYear 3: 2M users\n\nGrowth driven by marketing campaigns and seasonal events.',
+                    '2-0-1': 'Average: 500 req/s\nPeak (Black Friday): 5000 req/s\nBurst capacity needed: 10000 req/s\n\nRead/Write ratio: 80/20',
+                    '2-0-2': 'Initial data:\n- Products: 50,000 SKUs\n- Daily orders: 5,000\n- Growth: 100GB/month\n- Images: 500GB initial, 50GB/month growth',
+                    // Phase 2: Reliability
+                    '2-1-0': 'SLA: 99.9% uptime (8.76 hours downtime/year)\nRTO: 1 hour\nRPO: 5 minutes\nCritical path: Search → Cart → Checkout → Payment',
+                    '2-1-1': 'Checkout and payment must never lose data.\nProduct catalog can be eventually consistent (5s delay OK).\nInventory requires strong consistency to prevent overselling.',
+                    // Phase 3: System Boundaries
+                    '3-0-0': 'Microservices architecture with the following domains:\n1. Product Catalog Service\n2. Cart Service\n3. Order Service\n4. User/Auth Service\n5. Payment Service\n6. Notification Service\n7. Search Service',
+                    '3-0-1': 'External integrations:\n- Stripe/PayPal (payments)\n- Elasticsearch (search)\n- Redis (caching, sessions)\n- S3 (images, static assets)\n- SES (emails)\n- Twilio (SMS)',
+                    // Phase 3: Architecture Style
+                    '3-1-0': 'Event-driven microservices with API Gateway.\n\nPros:\n- Independent scaling per service\n- Team autonomy\n- Technology flexibility\n\nCons:\n- Operational complexity\n- Distributed transactions\n- Network latency'
+                },
+                codeSnippets: {
+                    '1-0-0': '// Architecture Decision Record: ADR-001\nconst ADR = {\n  title: "Use microservices architecture",\n  status: "accepted",\n  date: "2024-01-15",\n  context: "Need to scale teams independently and handle variable load across different features",\n  decision: "Adopt microservices with API gateway pattern",\n  consequences: [\n    "+ Independent deployments",\n    "+ Targeted scaling",\n    "- Increased operational complexity",\n    "- Distributed tracing needed"\n  ]\n};',
+                    '2-0-1': '// Load testing configuration\nconst loadTestConfig = {\n  scenarios: {\n    normalLoad: {\n      executor: "ramping-vus",\n      startVUs: 0,\n      stages: [\n        { duration: "5m", target: 100 },\n        { duration: "10m", target: 500 },\n        { duration: "5m", target: 0 }\n      ]\n    },\n    peakLoad: {\n      executor: "constant-vus",\n      vus: 1000,\n      duration: "30m"\n    }\n  },\n  thresholds: {\n    http_req_duration: ["p(95)<2000"],\n    http_req_failed: ["rate<0.01"]\n  }\n};',
+                    '3-0-0': '// Service boundaries definition\ninterface ServiceConfig {\n  name: string;\n  port: number;\n  database: "postgres" | "redis" | "elasticsearch";\n  dependencies: string[];\n}\n\nconst services: ServiceConfig[] = [\n  { name: "product-service", port: 3001, database: "postgres", dependencies: ["elasticsearch"] },\n  { name: "cart-service", port: 3002, database: "redis", dependencies: ["product-service"] },\n  { name: "order-service", port: 3003, database: "postgres", dependencies: ["cart-service", "payment-service"] },\n  { name: "payment-service", port: 3004, database: "postgres", dependencies: [] }\n];'
+                },
+                codeLanguages: {
+                    '1-0-0': 'javascript',
+                    '2-0-1': 'javascript',
+                    '3-0-0': 'typescript'
+                },
+                diagrams: {
+                    '2-0-0': 'graph TD\n    subgraph Users\n        U1[Web Users]\n        U2[Mobile Users]\n    end\n    \n    subgraph Edge\n        CDN[CloudFront CDN]\n        LB[Application Load Balancer]\n    end\n    \n    subgraph Services\n        API[API Gateway]\n        AUTH[Auth Service]\n        PROD[Product Service]\n        CART[Cart Service]\n        ORDER[Order Service]\n        PAY[Payment Service]\n    end\n    \n    subgraph Data\n        PG[(PostgreSQL)]\n        REDIS[(Redis)]\n        ES[(Elasticsearch)]\n        S3[(S3 Storage)]\n    end\n    \n    U1 --> CDN\n    U2 --> CDN\n    CDN --> LB\n    LB --> API\n    API --> AUTH\n    API --> PROD\n    API --> CART\n    API --> ORDER\n    ORDER --> PAY\n    PROD --> PG\n    PROD --> ES\n    CART --> REDIS\n    ORDER --> PG\n    PAY --> PG',
+                    '3-0-0': 'sequenceDiagram\n    participant U as User\n    participant API as API Gateway\n    participant Auth as Auth Service\n    participant Cart as Cart Service\n    participant Order as Order Service\n    participant Pay as Payment Service\n    participant DB as Database\n    \n    U->>API: POST /checkout\n    API->>Auth: Validate Token\n    Auth-->>API: User Valid\n    API->>Cart: Get Cart Items\n    Cart-->>API: Cart Data\n    API->>Order: Create Order\n    Order->>DB: Save Order (pending)\n    Order->>Pay: Process Payment\n    Pay-->>Order: Payment Success\n    Order->>DB: Update Order (confirmed)\n    Order-->>API: Order Confirmed\n    API-->>U: Order #12345',
+                    '3-1-0': 'graph LR\n    subgraph Event Bus\n        EB[Amazon EventBridge]\n    end\n    \n    subgraph Publishers\n        OS[Order Service]\n        PS[Payment Service]\n        IS[Inventory Service]\n    end\n    \n    subgraph Subscribers\n        NS[Notification Service]\n        AS[Analytics Service]\n        WS[Warehouse Service]\n    end\n    \n    OS -->|OrderCreated| EB\n    OS -->|OrderShipped| EB\n    PS -->|PaymentProcessed| EB\n    IS -->|StockLow| EB\n    \n    EB -->|OrderCreated| NS\n    EB -->|OrderCreated| AS\n    EB -->|OrderCreated| WS\n    EB -->|PaymentProcessed| NS\n    EB -->|StockLow| NS'
+                },
+                questionLinks: {
+                    '1-0-0': [
+                        { title: 'Architecture Decision Records', url: 'https://adr.github.io/' },
+                        { title: 'Microservices Patterns', url: 'https://microservices.io/patterns/' }
+                    ],
+                    '1-0-2': [
+                        { title: 'Stripe API Docs', url: 'https://stripe.com/docs/api' },
+                        { title: 'SAP Integration Guide', url: 'https://api.sap.com/' }
+                    ],
+                    '2-0-0': [
+                        { title: 'AWS Auto Scaling', url: 'https://aws.amazon.com/autoscaling/' },
+                        { title: 'Capacity Planning Guide', url: 'https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/plan-your-network-topology.html' }
+                    ],
+                    '2-1-0': [
+                        { title: 'SLA Best Practices', url: 'https://cloud.google.com/blog/products/devops-sre/sre-fundamentals-slis-slas-and-slos' }
+                    ],
+                    '3-0-0': [
+                        { title: 'Domain-Driven Design', url: 'https://martinfowler.com/bliki/DomainDrivenDesign.html' },
+                        { title: 'Bounded Contexts', url: 'https://martinfowler.com/bliki/BoundedContext.html' }
+                    ],
+                    '3-1-0': [
+                        { title: 'Event-Driven Architecture', url: 'https://aws.amazon.com/event-driven-architecture/' },
+                        { title: 'CQRS Pattern', url: 'https://docs.microsoft.com/en-us/azure/architecture/patterns/cqrs' }
+                    ]
+                },
+                stakeholders: [
+                    { id: 1, name: 'Sarah Chen', role: 'Product Owner' },
+                    { id: 2, name: 'Mike Johnson', role: 'Tech Lead' },
+                    { id: 3, name: 'Emily Davis', role: 'DevOps Engineer' },
+                    { id: 4, name: 'James Wilson', role: 'Security Architect' },
+                    { id: 5, name: 'Lisa Park', role: 'QA Lead' }
+                ],
+                references: [
+                    { id: 1, title: 'System Design Primer', url: 'https://github.com/donnemartin/system-design-primer' },
+                    { id: 2, title: 'AWS Well-Architected', url: 'https://aws.amazon.com/architecture/well-architected/' },
+                    { id: 3, title: 'Designing Data-Intensive Applications', url: 'https://dataintensive.net/' },
+                    { id: 4, title: 'Building Microservices', url: 'https://www.oreilly.com/library/view/building-microservices-2nd/9781492034018/' }
+                ],
+                expandedSections: { '1': true, '2': true, '3': true }
+            }
+        });
 
         const ArchitectureFramework = () => {
+            // Project state
             const [expandedSections, setExpandedSections] = useState({});
             const [checkedItems, setCheckedItems] = useState({});
             const [projectName, setProjectName] = useState('');
@@ -513,15 +705,18 @@
             const [codeLanguages, setCodeLanguages] = useState({});
             const [codePreviewModes, setCodePreviewModes] = useState({});
             const [diagrams, setDiagrams] = useState({});
-            const [diagramViewModes, setDiagramViewModes] = useState({}); // 'code' | 'preview' | 'split'
+            const [diagramViewModes, setDiagramViewModes] = useState({});
+            const [questionLinks, setQuestionLinks] = useState({});
             const [activeTabs, setActiveTabs] = useState({});
+            const [expandedItems, setExpandedItems] = useState({});
             const [fullscreenDiagram, setFullscreenDiagram] = useState(null);
             const [fullscreenCode, setFullscreenCode] = useState(null);
             const [stakeholders, setStakeholders] = useState([]);
             const [newStakeholder, setNewStakeholder] = useState({ name: '', role: '' });
             const [references, setReferences] = useState([]);
             const [newReference, setNewReference] = useState({ title: '', url: '' });
-            const [lastSaved, setLastSaved] = useState(null);
+            const [newQuestionLink, setNewQuestionLink] = useState({});
+            const [editingLink, setEditingLink] = useState(null);
             const [darkMode, setDarkMode] = useState(() => {
                 if (typeof window !== 'undefined') {
                     const saved = localStorage.getItem('arch-framework-darkmode');
@@ -531,52 +726,92 @@
                 return false;
             });
 
-            // Load from localStorage on mount
-            useEffect(() => {
-                try {
-                    const saved = localStorage.getItem(STORAGE_KEY);
-                    if (saved) {
-                        const data = JSON.parse(saved);
-                        if (data.checkedItems) setCheckedItems(data.checkedItems);
-                        if (data.notes) setNotes(data.notes);
-                        if (data.codeSnippets) setCodeSnippets(data.codeSnippets);
-                        if (data.codeLanguages) setCodeLanguages(data.codeLanguages);
-                        if (data.diagrams) setDiagrams(data.diagrams);
-                        if (data.projectName) setProjectName(data.projectName);
-                        if (data.expandedSections) setExpandedSections(data.expandedSections);
-                        if (data.stakeholders) setStakeholders(data.stakeholders);
-                        if (data.references) setReferences(data.references);
-                        setLastSaved(new Date(data.savedAt));
-                    }
-                } catch (e) {
-                    console.error('Failed to load saved data:', e);
-                }
-            }, []);
+            // Load project data into state (used by import)
+            const loadProjectData = (data) => {
+                setProjectName(data.name || '');
+                setCheckedItems(data.checkedItems || {});
+                setNotes(data.notes || {});
+                setCodeSnippets(data.codeSnippets || {});
+                setCodeLanguages(data.codeLanguages || {});
+                setDiagrams(data.diagrams || {});
+                setQuestionLinks(data.questionLinks || {});
+                setStakeholders(data.stakeholders || []);
+                setReferences(data.references || []);
+                setExpandedSections(data.expandedSections || {});
+                setActiveTabs({});
+                setExpandedItems({});
+                setNewQuestionLink({});
+                setEditingLink(null);
+            };
 
-            // Save to localStorage on changes
-            useEffect(() => {
-                const timeoutId = setTimeout(() => {
-                    try {
-                        const data = {
-                            checkedItems,
-                            notes,
-                            codeSnippets,
-                            codeLanguages,
-                            diagrams,
-                            projectName,
-                            expandedSections,
-                            stakeholders,
-                            references,
-                            savedAt: new Date().toISOString()
-                        };
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                        setLastSaved(new Date());
-                    } catch (e) {
-                        console.error('Failed to save data:', e);
+            // Parse markdown to project data
+            const parseMarkdownToProject = (content) => {
+                try {
+                    const data = createEmptyProjectData();
+                    let name = 'Imported Project';
+
+                    // Extract project name
+                    const titleMatch = content.match(/^# Architecture Framework: (.+)$/m);
+                    if (titleMatch) {
+                        name = titleMatch[1].trim();
                     }
-                }, 500);
-                return () => clearTimeout(timeoutId);
-            }, [checkedItems, notes, codeSnippets, codeLanguages, diagrams, projectName, expandedSections, stakeholders, references]);
+
+                    // Extract stakeholders
+                    const stakeholderSection = content.match(/## Stakeholders\n\n\| Name \| Role \|\n\|------\|------\|\n([\s\S]*?)(?=\n\n|## |$)/);
+                    if (stakeholderSection) {
+                        const rows = stakeholderSection[1].trim().split('\n');
+                        rows.forEach(row => {
+                            const match = row.match(/\| (.+?) \| (.+?) \|/);
+                            if (match) {
+                                data.stakeholders.push({
+                                    id: Date.now() + Math.random(),
+                                    name: match[1].trim(),
+                                    role: match[2].trim() === '-' ? '' : match[2].trim()
+                                });
+                            }
+                        });
+                    }
+
+                    // Extract references
+                    const referencesSection = content.match(/## References\n\n([\s\S]*?)(?=\n---|\n## |$)/);
+                    if (referencesSection) {
+                        const refLines = referencesSection[1].trim().split('\n');
+                        refLines.forEach(line => {
+                            const match = line.match(/- \[(.+?)\]\((.+?)\)/);
+                            if (match) {
+                                data.references.push({
+                                    id: Date.now() + Math.random(),
+                                    title: match[1],
+                                    url: match[2]
+                                });
+                            }
+                        });
+                    }
+
+                    // Parse checkboxes and content (basic parsing)
+                    const activeFramework = framework;
+                    activeFramework.forEach(phase => {
+                        phase.sections.forEach((section, sIndex) => {
+                            section.questions.forEach((questionItem, qIndex) => {
+                                const key = `${phase.id}-${sIndex}-${qIndex}`;
+                                const questionText = typeof questionItem === 'string' ? questionItem : questionItem.q;
+                                const escapedQuestion = questionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                const checkboxPattern = new RegExp(`- \\[(x| )\\] ${escapedQuestion}`);
+                                const checkboxMatch = content.match(checkboxPattern);
+
+                                if (checkboxMatch) {
+                                    data.checkedItems[key] = checkboxMatch[1] === 'x';
+                                }
+                            });
+                        });
+                    });
+
+                    return { name, data };
+                } catch (e) {
+                    console.error('Parse markdown failed:', e);
+                    return null;
+                }
+            };
 
             useEffect(() => {
                 document.documentElement.classList.toggle('dark', darkMode);
@@ -1297,7 +1532,22 @@
 
             const toggleCheck = (phaseId, sectionIndex, questionIndex) => {
                 const key = `${phaseId}-${sectionIndex}-${questionIndex}`;
+                const willBeChecked = !checkedItems[key];
                 setCheckedItems(prev => ({
+                    ...prev,
+                    [key]: willBeChecked
+                }));
+                // Auto-collapse when checked
+                if (willBeChecked) {
+                    setExpandedItems(prev => ({
+                        ...prev,
+                        [key]: false
+                    }));
+                }
+            };
+
+            const toggleItemExpand = (key) => {
+                setExpandedItems(prev => ({
                     ...prev,
                     [key]: !prev[key]
                 }));
@@ -1324,6 +1574,38 @@
                 setDiagrams(prev => ({
                     ...prev,
                     [key]: value
+                }));
+            };
+
+            const normalizeUrl = (url) => {
+                if (!url) return url;
+                const trimmed = url.trim();
+                if (!/^https?:\/\//i.test(trimmed)) {
+                    return 'https://' + trimmed;
+                }
+                return trimmed;
+            };
+
+            const addQuestionLink = (key, link) => {
+                setQuestionLinks(prev => ({
+                    ...prev,
+                    [key]: [...(prev[key] || []), { ...link, url: normalizeUrl(link.url) }]
+                }));
+            };
+
+            const removeQuestionLink = (key, index) => {
+                setQuestionLinks(prev => ({
+                    ...prev,
+                    [key]: (prev[key] || []).filter((_, i) => i !== index)
+                }));
+            };
+
+            const updateQuestionLink = (key, index, updatedLink) => {
+                setQuestionLinks(prev => ({
+                    ...prev,
+                    [key]: (prev[key] || []).map((link, i) =>
+                        i === index ? { ...updatedLink, url: normalizeUrl(updatedLink.url) } : link
+                    )
                 }));
             };
 
@@ -1361,10 +1643,11 @@
 
             const addReference = () => {
                 if (newReference.url.trim()) {
+                    const normalizedUrl = normalizeUrl(newReference.url);
                     setReferences(prev => [...prev, {
-                        ...newReference,
                         id: Date.now(),
-                        title: newReference.title.trim() || newReference.url
+                        title: newReference.title.trim() || normalizedUrl,
+                        url: normalizedUrl
                     }]);
                     setNewReference({ title: '', url: '' });
                 }
@@ -1375,11 +1658,12 @@
             };
 
             const calculateProgress = () => {
-                const totalQuestions = framework.reduce((acc, phase) =>
+                const activeFramework = framework;
+                const totalQuestions = activeFramework.reduce((acc, phase) =>
                     acc + phase.sections.reduce((sAcc, section) => sAcc + section.questions.length, 0), 0
                 );
                 const checkedCount = Object.values(checkedItems).filter(Boolean).length;
-                return Math.round((checkedCount / totalQuestions) * 100);
+                return totalQuestions > 0 ? Math.round((checkedCount / totalQuestions) * 100) : 0;
             };
 
             const resetProgress = () => {
@@ -1390,6 +1674,7 @@
                     setCodeLanguages({});
                     setCodePreviewModes({});
                     setDiagrams({});
+                    setQuestionLinks({});
                     setActiveTabs({});
                     setProjectName('');
                     setExpandedSections({});
@@ -1397,6 +1682,8 @@
                     setReferences([]);
                     setFullscreenDiagram(null);
                     setFullscreenCode(null);
+                    setEditingLink(null);
+                    setNewQuestionLink({});
                     localStorage.removeItem(STORAGE_KEY);
                 }
             };
@@ -1412,7 +1699,8 @@
                 setStakeholders(prev => prev.filter(s => s.id !== id));
             };
 
-            const exportNotes = () => {
+            const generateMarkdown = () => {
+                const activeFramework = framework;
                 let markdown = `# Architecture Framework: ${projectName || 'Untitled Project'}\n\n`;
                 markdown += `**Progress**: ${calculateProgress()}%\n\n`;
                 markdown += `**Date**: ${new Date().toLocaleDateString()}\n\n`;
@@ -1436,7 +1724,7 @@
 
                 markdown += `---\n\n`;
 
-                framework.forEach(phase => {
+                activeFramework.forEach(phase => {
                     markdown += `## ${phase.number}. ${phase.phase}\n\n`;
                     markdown += `> ${phase.description}\n\n`;
                     phase.sections.forEach((section, sIndex) => {
@@ -1450,6 +1738,7 @@
                             const note = notes[key];
                             const code = codeSnippets[key];
                             const diagram = diagrams[key];
+                            const links = questionLinks[key];
                             const questionText = typeof questionItem === 'string' ? questionItem : questionItem.q;
                             markdown += `- [${isChecked ? 'x' : ' '}] ${questionText}\n`;
                             if (note) {
@@ -1461,19 +1750,32 @@
                             if (diagram) {
                                 markdown += `\n  **Diagram**:\n  \`\`\`mermaid\n${diagram.split('\n').map(l => '  ' + l).join('\n')}\n  \`\`\`\n\n`;
                             }
+                            if (links && links.length > 0) {
+                                markdown += `\n  **Links**:\n`;
+                                links.forEach(link => {
+                                    markdown += `  - [${link.title}](${link.url})\n`;
+                                });
+                                markdown += `\n`;
+                            }
                         });
                         markdown += `\n`;
                     });
                 });
 
+                return markdown;
+            };
+
+            const exportNotes = () => {
+                const markdown = generateMarkdown();
                 const blob = new Blob([markdown], { type: 'text/markdown' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `architecture-framework-${projectName.replace(/\s+/g, '-').toLowerCase() || 'project'}.md`;
+                a.download = `architecture-framework-${(projectName || 'project').replace(/\s+/g, '-').toLowerCase()}.md`;
                 a.click();
                 URL.revokeObjectURL(url);
             };
+
 
             const importMarkdown = (content) => {
                 try {
@@ -1481,6 +1783,7 @@
                     const newNotes = {};
                     const newCodeSnippets = {};
                     const newDiagrams = {};
+                    const newQuestionLinks = {};
                     const newStakeholders = [];
                     const newReferences = [];
                     let newProjectName = '';
@@ -1561,6 +1864,25 @@
                                     if (diagramMatch) {
                                         newDiagrams[key] = diagramMatch[1].split('\n').map(l => l.replace(/^  /, '')).join('\n');
                                     }
+
+                                    // Extract links
+                                    const linksMatch = afterCheckbox.match(/\*\*Links\*\*:\n([\s\S]*?)(?=\n\n  \*\*|(?:\n- \[)|(?:\n### )|(?:\n## )|$)/);
+                                    if (linksMatch) {
+                                        const linkLines = linksMatch[1].trim().split('\n');
+                                        const parsedLinks = [];
+                                        linkLines.forEach(line => {
+                                            const linkMatch = line.match(/^\s*- \[(.+?)\]\((.+?)\)/);
+                                            if (linkMatch) {
+                                                parsedLinks.push({
+                                                    title: linkMatch[1],
+                                                    url: linkMatch[2]
+                                                });
+                                            }
+                                        });
+                                        if (parsedLinks.length > 0) {
+                                            newQuestionLinks[key] = parsedLinks;
+                                        }
+                                    }
                                 }
                             });
                         });
@@ -1572,6 +1894,7 @@
                     setNotes(newNotes);
                     setCodeSnippets(newCodeSnippets);
                     setDiagrams(newDiagrams);
+                    setQuestionLinks(newQuestionLinks);
                     setStakeholders(newStakeholders);
                     setReferences(newReferences);
 
@@ -1605,7 +1928,7 @@
             );
 
             return (
-                <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-zinc-950' : 'bg-zinc-50'}`}>
+                <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-zinc-950' : 'light bg-zinc-50'}`}>
                     <div className="flex">
                         {/* Sidebar */}
                         <div className={`hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 border-r transition-colors duration-300 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}>
@@ -1625,17 +1948,17 @@
                                 </div>
 
                                 {/* Description */}
-                                <p className={`text-xs leading-relaxed mb-5 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                                    A structured checklist to guide system design decisions. Work through each phase, check off questions as you answer them, and add notes to document your decisions. Export your progress as Markdown when done.
+                                <p className={`text-xs leading-relaxed mb-4 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                                    A structured checklist to guide system design decisions. Work through each phase, check off questions as you answer them, and add notes to document your decisions.
                                 </p>
 
                                 {/* Progress */}
-                                <div className="flex justify-center mb-6">
-                                    <ProgressRing progress={calculateProgress()} darkMode={darkMode} size={100} />
+                                <div className="flex justify-center mb-5">
+                                    <ProgressRing progress={calculateProgress()} darkMode={darkMode} size={90} />
                                 </div>
 
                                 {/* Project Name */}
-                                <div className="mb-5">
+                                <div className="mb-4">
                                     <label className={`block text-xs font-medium mb-1.5 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Project Name</label>
                                     <input
                                         type="text"
@@ -1765,16 +2088,17 @@
 
                                 {/* Controls */}
                                 <div className="space-y-2">
+                                    {/* Save/Import */}
                                     <div className="flex gap-2">
                                         <button
                                             onClick={exportNotes}
-                                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
+                                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}
                                         >
-                                            <Download size={16} />
-                                            <span>Export</span>
+                                            <Download size={14} />
+                                            <span>Save</span>
                                         </button>
-                                        <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}>
-                                            <Upload size={16} />
+                                        <label className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}>
+                                            <Upload size={14} />
                                             <span>Import</span>
                                             <input
                                                 type="file"
@@ -1785,6 +2109,7 @@
                                         </label>
                                     </div>
 
+                                    {/* Expand/Collapse */}
                                     <div className="flex gap-2">
                                         <button
                                             onClick={expandAll}
@@ -1810,12 +2135,6 @@
                                         <span>Reset Progress</span>
                                     </button>
 
-                                    {lastSaved && (
-                                        <div className={`flex items-center justify-center gap-1 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                                            <Save size={10} />
-                                            <span>Auto-saved</span>
-                                        </div>
-                                    )}
 
                                     <a
                                         href="https://github.com/adibhanna/arch.github.io"
@@ -1934,9 +2253,13 @@
                                                                                 const note = notes[itemKey] || '';
                                                                                 const code = codeSnippets[itemKey] || '';
                                                                                 const diagram = diagrams[itemKey] || '';
+                                                                                const links = questionLinks[itemKey] || [];
                                                                                 const activeTab = activeTabs[itemKey] || 'notes';
                                                                                 const questionText = typeof questionItem === 'string' ? questionItem : questionItem.q;
                                                                                 const questionTip = typeof questionItem === 'object' ? questionItem.tip : null;
+                                                                                // Show expanded if not checked OR if explicitly expanded
+                                                                                const isExpanded = !isChecked || expandedItems[itemKey];
+                                                                                const hasContent = note || code || diagram || links.length > 0;
 
                                                                                 return (
                                                                                     <div key={qIndex} className={`p-3 rounded-lg transition-colors ${isChecked ? (darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50') : ''}`}>
@@ -1952,18 +2275,30 @@
                                                                                                 )}
                                                                                             </button>
                                                                                             <div className="flex-1 min-w-0">
-                                                                                                <div className="flex items-start gap-1.5">
+                                                                                                <div
+                                                                                                    className={`flex items-start gap-1.5 ${isChecked ? 'cursor-pointer' : ''}`}
+                                                                                                    onClick={isChecked ? () => toggleItemExpand(itemKey) : undefined}
+                                                                                                >
                                                                                                     <span className={`text-sm leading-relaxed ${isChecked ? (darkMode ? 'text-zinc-600' : 'text-zinc-400') : (darkMode ? 'text-zinc-300' : 'text-zinc-700')}`}>
                                                                                                         {questionText}
                                                                                                     </span>
-                                                                                                    {questionTip && (
+                                                                                                    {questionTip && !isChecked && (
                                                                                                         <Tooltip content={questionTip} darkMode={darkMode}>
                                                                                                             <HelpCircle size={14} className={`flex-shrink-0 mt-0.5 ${darkMode ? 'text-zinc-600 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-600'}`} />
                                                                                                         </Tooltip>
                                                                                                     )}
+                                                                                                    {isChecked && (
+                                                                                                        <button
+                                                                                                            onClick={(e) => { e.stopPropagation(); toggleItemExpand(itemKey); }}
+                                                                                                            className={`flex-shrink-0 mt-0.5 ml-auto transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                                                                                        >
+                                                                                                            <ChevronsDown size={14} className={darkMode ? 'text-zinc-600' : 'text-zinc-400'} />
+                                                                                                        </button>
+                                                                                                    )}
                                                                                                 </div>
 
-                                                                                                {/* Tabs */}
+                                                                                                {/* Tabs - only show when expanded */}
+                                                                                                {isExpanded && (<>
                                                                                                 <div className="flex items-center gap-1 mt-2 mb-2">
                                                                                                     <button
                                                                                                         onClick={() => setActiveTab(phase.id, sIndex, qIndex, 'notes')}
@@ -1985,6 +2320,18 @@
                                                                                                     >
                                                                                                         <GitBranch size={12} />
                                                                                                         <span>Diagram</span>
+                                                                                                    </button>
+                                                                                                    <button
+                                                                                                        onClick={() => setActiveTab(phase.id, sIndex, qIndex, 'links')}
+                                                                                                        className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${activeTab === 'links' ? (darkMode ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-200 text-zinc-800') : (darkMode ? 'text-zinc-500 hover:text-zinc-400' : 'text-zinc-500 hover:text-zinc-600')}`}
+                                                                                                    >
+                                                                                                        <Link2 size={12} />
+                                                                                                        <span>Links</span>
+                                                                                                        {links.length > 0 && (
+                                                                                                            <span className={`ml-0.5 text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                                                                                                                ({links.length})
+                                                                                                            </span>
+                                                                                                        )}
                                                                                                     </button>
                                                                                                 </div>
 
@@ -2101,7 +2448,7 @@
 
                                                                                                 {/* Diagram Tab */}
                                                                                                 {activeTab === 'diagram' && (() => {
-                                                                                                    const viewMode = diagramViewModes[itemKey] || 'split';
+                                                                                                    const viewMode = diagramViewModes[itemKey] || 'code';
                                                                                                     return (
                                                                                                     <div className="space-y-2">
                                                                                                         {/* Diagram toolbar */}
@@ -2113,12 +2460,6 @@
                                                                                                                 >
                                                                                                                     <Code size={12} />
                                                                                                                     <span>Code</span>
-                                                                                                                </button>
-                                                                                                                <button
-                                                                                                                    onClick={() => setDiagramViewMode(phase.id, sIndex, qIndex, 'split')}
-                                                                                                                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${viewMode === 'split' ? (darkMode ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-200 text-zinc-800') : (darkMode ? 'text-zinc-500 hover:text-zinc-400' : 'text-zinc-500 hover:text-zinc-600')}`}
-                                                                                                                >
-                                                                                                                    <span>Split</span>
                                                                                                                 </button>
                                                                                                                 <button
                                                                                                                     onClick={() => setDiagramViewMode(phase.id, sIndex, qIndex, 'preview')}
@@ -2139,36 +2480,15 @@
                                                                                                             )}
                                                                                                         </div>
 
-                                                                                                        {/* Split/Code/Preview views */}
-                                                                                                        {viewMode === 'split' ? (
-                                                                                                            <div className="grid grid-cols-2 gap-3">
-                                                                                                                <div>
-                                                                                                                    <textarea
-                                                                                                                        placeholder="Enter mermaid diagram code...&#10;&#10;Example:&#10;graph TD&#10;    A[Start] --> B[Process]&#10;    B --> C[End]"
-                                                                                                                        value={diagram}
-                                                                                                                        onChange={(e) => updateDiagram(phase.id, sIndex, qIndex, e.target.value)}
-                                                                                                                        className={`w-full h-48 px-3 py-2 text-sm font-mono border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-y transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
-                                                                                                                    />
-                                                                                                                </div>
-                                                                                                                <div className={`h-48 p-3 border rounded-lg overflow-auto ${darkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-zinc-200'}`}>
-                                                                                                                    <MermaidDiagram code={diagram} darkMode={darkMode} id={itemKey} />
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                        ) : viewMode === 'code' ? (
-                                                                                                            <div className="space-y-2">
-                                                                                                                <textarea
-                                                                                                                    placeholder="Enter mermaid diagram code...&#10;&#10;Example:&#10;graph TD&#10;    A[Start] --> B[Process]&#10;    B --> C[End]"
-                                                                                                                    value={diagram}
-                                                                                                                    onChange={(e) => updateDiagram(phase.id, sIndex, qIndex, e.target.value)}
-                                                                                                                    className={`w-full px-3 py-2 text-sm font-mono border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-y transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
-                                                                                                                    rows="8"
-                                                                                                                />
-                                                                                                                {diagram && (
-                                                                                                                    <div className="rounded-lg overflow-hidden">
-                                                                                                                        <SyntaxHighlighter code={diagram} language="mermaid" darkMode={darkMode} />
-                                                                                                                    </div>
-                                                                                                                )}
-                                                                                                            </div>
+                                                                                                        {/* Code/Preview views */}
+                                                                                                        {viewMode === 'code' ? (
+                                                                                                            <textarea
+                                                                                                                placeholder="Enter mermaid diagram code...&#10;&#10;Example:&#10;graph TD&#10;    A[Start] --> B[Process]&#10;    B --> C[End]"
+                                                                                                                value={diagram}
+                                                                                                                onChange={(e) => updateDiagram(phase.id, sIndex, qIndex, e.target.value)}
+                                                                                                                className={`w-full px-3 py-2 text-sm font-mono border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 resize-y transition-colors ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-700' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
+                                                                                                                rows="10"
+                                                                                                            />
                                                                                                         ) : (
                                                                                                             <div className={`min-h-48 p-3 border rounded-lg overflow-auto ${darkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-zinc-200'}`}>
                                                                                                                 <MermaidDiagram code={diagram} darkMode={darkMode} id={itemKey} showControls={true} />
@@ -2177,6 +2497,147 @@
                                                                                                     </div>
                                                                                                 );
                                                                                                 })()}
+
+                                                                                                {/* Links Tab */}
+                                                                                                {activeTab === 'links' && (
+                                                                                                    <div className="space-y-2">
+                                                                                                        {/* Existing links */}
+                                                                                                        {links.length > 0 && (
+                                                                                                            <div className="space-y-1">
+                                                                                                                {links.map((link, linkIndex) => {
+                                                                                                                    const isEditing = editingLink && editingLink.key === itemKey && editingLink.index === linkIndex;
+
+                                                                                                                    if (isEditing) {
+                                                                                                                        return (
+                                                                                                                            <div
+                                                                                                                                key={linkIndex}
+                                                                                                                                className={`flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-zinc-800 ring-1 ring-zinc-600' : 'bg-zinc-100 ring-1 ring-zinc-300'}`}
+                                                                                                                            >
+                                                                                                                                <input
+                                                                                                                                    type="text"
+                                                                                                                                    placeholder="Title"
+                                                                                                                                    value={editingLink.title}
+                                                                                                                                    onChange={(e) => setEditingLink(prev => ({ ...prev, title: e.target.value }))}
+                                                                                                                                    className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-zinc-500 ${darkMode ? 'bg-zinc-700 border-zinc-600 text-zinc-200' : 'bg-white border-zinc-300 text-zinc-700'}`}
+                                                                                                                                />
+                                                                                                                                <input
+                                                                                                                                    type="text"
+                                                                                                                                    placeholder="URL"
+                                                                                                                                    value={editingLink.url}
+                                                                                                                                    onChange={(e) => setEditingLink(prev => ({ ...prev, url: e.target.value }))}
+                                                                                                                                    onKeyDown={(e) => {
+                                                                                                                                        if (e.key === 'Enter' && editingLink.url.trim()) {
+                                                                                                                                            updateQuestionLink(itemKey, linkIndex, { title: editingLink.title.trim() || editingLink.url.trim(), url: editingLink.url.trim() });
+                                                                                                                                            setEditingLink(null);
+                                                                                                                                        } else if (e.key === 'Escape') {
+                                                                                                                                            setEditingLink(null);
+                                                                                                                                        }
+                                                                                                                                    }}
+                                                                                                                                    className={`flex-[2] px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-zinc-500 ${darkMode ? 'bg-zinc-700 border-zinc-600 text-zinc-200' : 'bg-white border-zinc-300 text-zinc-700'}`}
+                                                                                                                                />
+                                                                                                                                <button
+                                                                                                                                    onClick={() => {
+                                                                                                                                        if (editingLink.url.trim()) {
+                                                                                                                                            updateQuestionLink(itemKey, linkIndex, { title: editingLink.title.trim() || editingLink.url.trim(), url: editingLink.url.trim() });
+                                                                                                                                            setEditingLink(null);
+                                                                                                                                        }
+                                                                                                                                    }}
+                                                                                                                                    className={`p-1 rounded ${darkMode ? 'text-green-400 hover:bg-zinc-700' : 'text-green-600 hover:bg-zinc-200'}`}
+                                                                                                                                    title="Save"
+                                                                                                                                >
+                                                                                                                                    <Check size={14} />
+                                                                                                                                </button>
+                                                                                                                                <button
+                                                                                                                                    onClick={() => setEditingLink(null)}
+                                                                                                                                    className={`p-1 rounded ${darkMode ? 'text-zinc-500 hover:text-zinc-400 hover:bg-zinc-700' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+                                                                                                                                    title="Cancel"
+                                                                                                                                >
+                                                                                                                                    <X size={14} />
+                                                                                                                                </button>
+                                                                                                                            </div>
+                                                                                                                        );
+                                                                                                                    }
+
+                                                                                                                    return (
+                                                                                                                        <div
+                                                                                                                            key={linkIndex}
+                                                                                                                            className={`flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-zinc-800' : 'bg-zinc-100'}`}
+                                                                                                                        >
+                                                                                                                            <ExternalLink size={14} className={darkMode ? 'text-zinc-500' : 'text-zinc-400'} />
+                                                                                                                            <a
+                                                                                                                                href={link.url}
+                                                                                                                                target="_blank"
+                                                                                                                                rel="noopener noreferrer"
+                                                                                                                                className={`flex-1 text-sm truncate hover:underline ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}
+                                                                                                                            >
+                                                                                                                                {link.title}
+                                                                                                                            </a>
+                                                                                                                            <button
+                                                                                                                                onClick={() => setEditingLink({ key: itemKey, index: linkIndex, title: link.title, url: link.url })}
+                                                                                                                                className={`p-1 rounded ${darkMode ? 'text-zinc-500 hover:text-zinc-400 hover:bg-zinc-700' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+                                                                                                                                title="Edit"
+                                                                                                                            >
+                                                                                                                                <Edit3 size={14} />
+                                                                                                                            </button>
+                                                                                                                            <button
+                                                                                                                                onClick={() => removeQuestionLink(itemKey, linkIndex)}
+                                                                                                                                className={`p-1 rounded ${darkMode ? 'text-zinc-500 hover:text-zinc-400 hover:bg-zinc-700' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+                                                                                                                                title="Remove"
+                                                                                                                            >
+                                                                                                                                <X size={14} />
+                                                                                                                            </button>
+                                                                                                                        </div>
+                                                                                                                    );
+                                                                                                                })}
+                                                                                                            </div>
+                                                                                                        )}
+
+                                                                                                        {/* Add new link */}
+                                                                                                        <div className="flex gap-2">
+                                                                                                            <input
+                                                                                                                type="text"
+                                                                                                                placeholder="Title (optional)"
+                                                                                                                value={(newQuestionLink[itemKey] || {}).title || ''}
+                                                                                                                onChange={(e) => setNewQuestionLink(prev => ({ ...prev, [itemKey]: { ...(prev[itemKey] || {}), title: e.target.value } }))}
+                                                                                                                className={`flex-1 px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-600' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
+                                                                                                            />
+                                                                                                            <input
+                                                                                                                type="url"
+                                                                                                                placeholder="URL"
+                                                                                                                value={(newQuestionLink[itemKey] || {}).url || ''}
+                                                                                                                onChange={(e) => setNewQuestionLink(prev => ({ ...prev, [itemKey]: { ...(prev[itemKey] || {}), url: e.target.value } }))}
+                                                                                                                onKeyDown={(e) => {
+                                                                                                                    if (e.key === 'Enter' && (newQuestionLink[itemKey] || {}).url?.trim()) {
+                                                                                                                        const linkData = newQuestionLink[itemKey] || {};
+                                                                                                                        addQuestionLink(itemKey, {
+                                                                                                                            title: linkData.title?.trim() || linkData.url.trim(),
+                                                                                                                            url: linkData.url.trim()
+                                                                                                                        });
+                                                                                                                        setNewQuestionLink(prev => ({ ...prev, [itemKey]: { title: '', url: '' } }));
+                                                                                                                    }
+                                                                                                                }}
+                                                                                                                className={`flex-[2] px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-600' : 'bg-white border-zinc-200 text-zinc-700 placeholder:text-zinc-400'}`}
+                                                                                                            />
+                                                                                                            <button
+                                                                                                                onClick={() => {
+                                                                                                                    const linkData = newQuestionLink[itemKey] || {};
+                                                                                                                    if (linkData.url?.trim()) {
+                                                                                                                        addQuestionLink(itemKey, {
+                                                                                                                            title: linkData.title?.trim() || linkData.url.trim(),
+                                                                                                                            url: linkData.url.trim()
+                                                                                                                        });
+                                                                                                                        setNewQuestionLink(prev => ({ ...prev, [itemKey]: { title: '', url: '' } }));
+                                                                                                                    }
+                                                                                                                }}
+                                                                                                                disabled={!(newQuestionLink[itemKey] || {}).url?.trim()}
+                                                                                                                className={`px-3 py-1.5 rounded-lg transition-colors ${(newQuestionLink[itemKey] || {}).url?.trim() ? (darkMode ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-200' : 'bg-zinc-200 hover:bg-zinc-300 text-zinc-700') : (darkMode ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed' : 'bg-zinc-100 text-zinc-400 cursor-not-allowed')}`}
+                                                                                                            >
+                                                                                                                <Plus size={16} />
+                                                                                                            </button>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                )}
+                                                                                                </>)}
                                                                                             </div>
                                                                                         </div>
                                                                                     </div>
@@ -2225,13 +2686,15 @@
                         darkMode={darkMode}
                     >
                         {fullscreenDiagram && (
-                            <MermaidDiagram
-                                code={fullscreenDiagram.code}
-                                darkMode={darkMode}
-                                id="fullscreen-diagram"
-                                showControls={true}
-                                initialZoom={1}
-                            />
+                            <div className="h-full">
+                                <MermaidDiagram
+                                    code={fullscreenDiagram.code}
+                                    darkMode={darkMode}
+                                    id="fullscreen-diagram"
+                                    showControls={true}
+                                    initialZoom={1}
+                                />
+                            </div>
                         )}
                     </FullscreenModal>
                 </div>
