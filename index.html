@@ -715,6 +715,7 @@
             const [newStakeholder, setNewStakeholder] = useState({ name: '', role: '' });
             const [references, setReferences] = useState([]);
             const [newReference, setNewReference] = useState({ title: '', url: '' });
+            const [additionalNotes, setAdditionalNotes] = useState('');
             const [newQuestionLink, setNewQuestionLink] = useState({});
             const [editingLink, setEditingLink] = useState(null);
             const [darkMode, setDarkMode] = useState(() => {
@@ -737,6 +738,7 @@
                 setQuestionLinks(data.questionLinks || {});
                 setStakeholders(data.stakeholders || []);
                 setReferences(data.references || []);
+                setAdditionalNotes(data.additionalNotes || '');
                 setExpandedSections(data.expandedSections || {});
                 setActiveTabs({});
                 setExpandedItems({});
@@ -1498,26 +1500,6 @@
                             ]
                         }
                     ]
-                },
-                {
-                    id: 'additional',
-                    phase: 'Additional Notes',
-                    number: '14',
-                    description: 'Capture anything else that doesn\'t fit neatly into the other sections. Meeting notes, open questions, decisions made, links to external resources, or any other context that helps tell the full story.',
-                    sections: [
-                        {
-                            title: 'Extra Notes',
-                            description: 'Any additional information, context, or documentation.',
-                            questions: [
-                                { q: 'Meeting notes or key decisions made', tip: 'Document important discussions, who was involved, and what was decided. Future you will thank you for the context.' },
-                                { q: 'Open questions or unresolved issues', tip: 'Track what still needs to be figured out. Include who owns finding the answer and any deadlines.' },
-                                { q: 'Links to external resources or documentation', tip: 'Reference related docs, wikis, design files, or external resources. Keep everything connected.' },
-                                { q: 'Assumptions made during design', tip: 'Explicitly state what you\'re assuming to be true. Assumptions should be validated and tracked.' },
-                                { q: 'Risks or concerns not covered elsewhere', tip: 'Capture any worries or potential issues that don\'t fit other categories. Better documented than forgotten.' },
-                                { q: 'Anything else worth noting', tip: 'Free space for whatever else is relevant to this architecture. Context is valuable.' }
-                            ]
-                        }
-                    ]
                 }
             ];
 
@@ -1700,6 +1682,7 @@
                     setExpandedSections({});
                     setStakeholders([]);
                     setReferences([]);
+                    setAdditionalNotes('');
                     setFullscreenDiagram(null);
                     setFullscreenCode(null);
                     setEditingLink(null);
@@ -1781,6 +1764,12 @@
                         markdown += `\n`;
                     });
                 });
+
+                if (additionalNotes.trim()) {
+                    markdown += `---\n\n`;
+                    markdown += `## Additional Notes\n\n`;
+                    markdown += `${additionalNotes}\n`;
+                }
 
                 return markdown;
             };
@@ -1908,6 +1897,13 @@
                         });
                     });
 
+                    // Extract additional notes
+                    let newAdditionalNotes = '';
+                    const additionalNotesMatch = content.match(/## Additional Notes\n\n([\s\S]*?)$/);
+                    if (additionalNotesMatch) {
+                        newAdditionalNotes = additionalNotesMatch[1].trim();
+                    }
+
                     // Apply imported data
                     setProjectName(newProjectName);
                     setCheckedItems(newCheckedItems);
@@ -1917,6 +1913,7 @@
                     setQuestionLinks(newQuestionLinks);
                     setStakeholders(newStakeholders);
                     setReferences(newReferences);
+                    setAdditionalNotes(newAdditionalNotes);
 
                     return true;
                 } catch (e) {
@@ -2673,6 +2670,26 @@
                                             </div>
                                         );
                                     })}
+                                </div>
+
+                                {/* Additional Notes Section */}
+                                <div className={`mt-8 rounded-xl border overflow-hidden ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+                                    <div className={`px-6 py-4 border-b ${darkMode ? 'border-zinc-800' : 'border-zinc-100'}`}>
+                                        <h2 className={`text-lg font-semibold ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
+                                            Additional Notes
+                                        </h2>
+                                        <p className={`text-sm mt-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                                            Capture anything else - meeting notes, open questions, decisions, or any other context.
+                                        </p>
+                                    </div>
+                                    <div className="p-6">
+                                        <textarea
+                                            value={additionalNotes}
+                                            onChange={(e) => setAdditionalNotes(e.target.value)}
+                                            placeholder="Add any additional notes, context, or documentation here..."
+                                            className={`w-full h-48 px-4 py-3 text-sm border rounded-lg resize-y transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/20 ${darkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                                        />
+                                    </div>
                                 </div>
 
                                 <p className={`text-center text-xs mt-8 ${darkMode ? 'text-zinc-700' : 'text-zinc-400'}`}>
